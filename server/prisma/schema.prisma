@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Round {
+  id        Int      @id @default(autoincrement())
+  course    String
+  date      DateTime @default(now())
+  holes     Hole[]
+  createdAt DateTime @default(now())
+}
+
+model Hole {
+  id      Int    @id @default(autoincrement())
+  number  Int
+  par     Int
+  shots   Shot[]
+  round   Round  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId Int
+
+  @@unique([roundId, number])
+}
+
+model Shot {
+  id            Int   @id @default(autoincrement())
+  hole          Hole  @relation(fields: [holeId], references: [id], onDelete: Cascade)
+  holeId        Int
+  shotNumber    Int
+  startLie      String
+  startDistance Float
+  endLie        String
+  endDistance   Float
+
+  @@unique([holeId, shotNumber])
+}

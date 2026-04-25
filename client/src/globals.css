@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.hero-section {
+  background:
+    url('/azalea-purple.svg') top -30px right -30px   / 220px 220px no-repeat,
+    url('/azalea-white.svg')  top  30px right 170px   / 130px 130px no-repeat,
+    url('/azalea-purple.svg') bottom -20px right 80px / 160px 160px no-repeat,
+    url('/azalea-white.svg')  bottom 20px left -20px  / 180px 180px no-repeat,
+    url('/azalea-purple.svg') bottom 60px left 140px  / 100px 100px no-repeat,
+    linear-gradient(140deg, #003D2B 0%, #00563F 55%, #006747 100%);
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 30, 18, 0.35);
+  pointer-events: none;
+}
+
+/* Compact native selects inside shot-entry table */
+.shot-select {
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #C8DDD0;
+  background: #fff;
+  color: #1A2E23;
+  cursor: pointer;
+}
+.shot-select:focus {
+  outline: none;
+  border-color: #00563F;
+  box-shadow: 0 0 0 2px rgba(0,86,63,0.2);
+}
+.shot-input {
+  width: 72px;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #C8DDD0;
+  background: #fff;
+  color: #1A2E23;
+}
+.shot-input:focus {
+  outline: none;
+  border-color: #00563F;
+  box-shadow: 0 0 0 2px rgba(0,86,63,0.2);
+}
+.shot-input:disabled { background: #f0f0f0; color: #999; }
