@@ -7,7 +7,7 @@ import {
 } from "@heroui/react";
 import { api } from "../api";
 import { fmtSG, fmtDate } from "../lib/format";
-import type { RoundSummary } from "../../../shared/types/index.js";
+import type { RoundSummary, DraftSummary } from "../../../shared/types/index.js";
 
 function SGChip({ value }: { value: number }) {
   return (
@@ -24,6 +24,7 @@ function SGChip({ value }: { value: number }) {
 
 export function Home() {
   const [rounds, setRounds] = useState<RoundSummary[] | null>(null);
+  const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [target, setTarget] = useState<RoundSummary | null>(null);
@@ -31,6 +32,7 @@ export function Home() {
 
   useEffect(() => {
     api.listRounds().then(setRounds).catch((e) => setError(String(e)));
+    api.listDrafts().then(setDrafts).catch(() => {});
   }, []);
 
   function confirmDelete(round: RoundSummary) {
@@ -62,6 +64,35 @@ export function Home() {
         <h2 className="text-[#003D2B] font-bold text-2xl m-0">Rounds</h2>
         <Button as={Link} to="/new" color="primary" size="sm">+ New Round</Button>
       </div>
+
+      {/* In-progress drafts */}
+      {drafts.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-[#003D2B] font-semibold text-sm uppercase tracking-wide m-0">In Progress</h3>
+          {drafts.map((d) => (
+            <div
+              key={d.id}
+              className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#F5D130]/50 bg-[#FFFDE8]"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-[#003D2B] text-sm">{d.course || "Untitled round"}</span>
+                <span className="text-xs text-[#4A6B57]">
+                  {fmtDate(d.date)} · {d.holeCount} {d.holeCount === 1 ? "hole" : "holes"} logged
+                </span>
+              </div>
+              <Button
+                as={Link}
+                to={`/new?draft=${d.id}`}
+                size="sm"
+                color="primary"
+                variant="flat"
+              >
+                Continue →
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {rounds.length === 0 ? (
         <p className="text-[#4A6B57]">No rounds yet. Log your first round.</p>

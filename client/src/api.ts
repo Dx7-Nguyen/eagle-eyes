@@ -2,6 +2,8 @@ import type {
   RoundInput,
   RoundDetail,
   RoundSummary,
+  RoundEditData,
+  DraftSummary,
   TrendPoint,
 } from "../../shared/types/index.js";
 
@@ -30,4 +32,20 @@ export const api = {
       if (!r.ok) throw new Error(`${r.status}`);
     }),
   trends: () => http<TrendPoint[]>("/api/trends"),
+
+  listDrafts: () => http<DraftSummary[]>("/api/rounds/drafts"),
+  getRoundEditData: (id: number) => http<RoundEditData>(`/api/rounds/${id}/edit`),
+  saveDraft: (input: RoundInput) =>
+    http<DraftSummary>("/api/rounds/draft", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  updateDraft: (id: number, input: RoundInput) =>
+    fetch(`/api/rounds/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    }).then((r) => { if (!r.ok) throw new Error(`${r.status}`); }),
+  publishRound: (id: number) =>
+    http<RoundDetail>(`/api/rounds/${id}/publish`, { method: "POST" }),
 };

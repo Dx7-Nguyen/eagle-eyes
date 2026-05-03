@@ -3,6 +3,8 @@ import type {
   RoundInput,
   RoundDetail,
   RoundSummary,
+  DraftSummary,
+  RoundEditData,
   Lie,
   EndLie,
 } from "../../../shared/types/index.js";
@@ -33,6 +35,81 @@ function validate(input: RoundInput): string | null {
   return null;
 }
 
+function validateDraft(input: RoundInput): string | null {
+  if (!input.course?.trim()) return "course is required";
+  for (const h of input.holes ?? []) {
+    if (!Number.isInteger(h.number) || h.number < 1 || h.number > 18) return `hole ${h.number}: invalid number`;
+    if (!Number.isInteger(h.par) || h.par < 3 || h.par > 6) return `hole ${h.number}: invalid par`;
+    for (const s of h.shots ?? []) {
+      if (!VALID_START_LIES.includes(s.startLie)) return `hole ${h.number} shot ${s.shotNumber}: bad startLie`;
+      if (!VALID_END_LIES.includes(s.endLie)) return `hole ${h.number} shot ${s.shotNumber}: bad endLie`;
+      if (!(s.startDistance >= 0)) return `hole ${h.number} shot ${s.shotNumber}: bad startDistance`;
+      if (!(s.endDistance >= 0)) return `hole ${h.number} shot ${s.shotNumber}: bad endDistance`;
+    }
+  }
+  return null;
+}
+
+// ── GET /drafts — list draft rounds ─────────────────────────────────────────
+// Must be declared before /:id
+roundsRouter.get("/drafts", async (_req, res) => {
+  const rounds = await prisma.round.findMany({
+    where: { status: "DRAFT" },
+    orderBy: { createdAt: "desc" },
+    include: { holes: true },
+  });
+  const summaries: DraftSummary[] = rounds.map((r) => ({
+    id: r.id,
+    course: r.course,
+    date: r.date.toISOString(),
+    holeCount: r.holes.length,
+  }));
+  res.json(summaries);
+});
+
+// ── POST /draft — create a new draft ────────────────────────────────────────
+roundsRouter.post("/draft", async (req, res) => {
+  const input = req.body as RoundInput;
+  const err = validateDraft(input);
+  if (err) return res.status(400).json({ error: err });
+
+  const created = await prisma.round.create({
+    data: {
+      course: input.course.trim(),
+      date: input.date ? new Date(input.date) : new Date(),
+      status: "DRAFT",
+      holes: {
+        create: (input.holes ?? []).map((h) => ({
+          number: h.number,
+          par: h.par,
+          shots: { create: h.shots.map(shotData) },
+        })),
+      },
+    },
+    include: { holes: true },
+  });
+
+  const summary: DraftSummary = {
+    id: created.id,
+    course: created.course,
+    date: created.date.toISOString(),
+    holeCount: created.holes.length,
+  };
+  res.status(201).json(summary);
+});
+
+// ── GET / — list published rounds ────────────────────────────────────────────
+roundsRouter.get("/", async (_req, res) => {
+  const rounds = await prisma.round.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { date: "desc" },
+    include: { holes: { include: { shots: true } } },
+  });
+  const summaries: RoundSummary[] = rounds.map(buildSummary);
+  res.json(summaries);
+});
+
+// ── POST / — create published round ─────────────────────────────────────────
 roundsRouter.post("/", async (req, res) => {
   const input = req.body as RoundInput;
   const err = validate(input);
@@ -42,19 +119,12 @@ roundsRouter.post("/", async (req, res) => {
     data: {
       course: input.course.trim(),
       date: input.date ? new Date(input.date) : new Date(),
+      status: "PUBLISHED",
       holes: {
         create: input.holes.map((h) => ({
           number: h.number,
           par: h.par,
-          shots: {
-            create: h.shots.map((s) => ({
-              shotNumber: s.shotNumber,
-              startLie: s.startLie,
-              startDistance: s.startDistance,
-              endLie: s.endLie,
-              endDistance: s.endDistance,
-            })),
-          },
+          shots: { create: h.shots.map(shotData) },
         })),
       },
     },
@@ -64,15 +134,7 @@ roundsRouter.post("/", async (req, res) => {
   res.status(201).json(buildDetail(created));
 });
 
-roundsRouter.get("/", async (_req, res) => {
-  const rounds = await prisma.round.findMany({
-    orderBy: { date: "desc" },
-    include: { holes: { include: { shots: true } } },
-  });
-  const summaries: RoundSummary[] = rounds.map(buildSummary);
-  res.json(summaries);
-});
-
+// ── DELETE /:id ──────────────────────────────────────────────────────────────
 roundsRouter.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
@@ -82,6 +144,119 @@ roundsRouter.delete("/:id", async (req, res) => {
   res.status(204).end();
 });
 
+// ── GET /:id/edit — raw editable data for any round ──────────────────────────
+// Must be declared before GET /:id
+roundsRouter.get("/:id/edit", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  const round = await prisma.round.findUnique({
+    where: { id },
+    include: { holes: { include: { shots: true } } },
+  });
+  if (!round) return res.status(404).json({ error: "not found" });
+
+  const editData: RoundEditData = {
+    id: round.id,
+    course: round.course,
+    date: round.date.toISOString(),
+    status: round.status as "DRAFT" | "PUBLISHED",
+    holes: round.holes
+      .sort((a, b) => a.number - b.number)
+      .map((h) => ({
+        number: h.number,
+        par: h.par,
+        shots: h.shots
+          .sort((a, b) => a.shotNumber - b.shotNumber)
+          .map((s) => ({
+            shotNumber: s.shotNumber,
+            startLie: s.startLie as Lie,
+            startDistance: s.startDistance,
+            endLie: s.endLie as EndLie,
+            endDistance: s.endDistance,
+          })),
+      })),
+  };
+  res.json(editData);
+});
+
+// ── PUT /:id — replace holes on a draft ─────────────────────────────────────
+roundsRouter.put("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+
+  const round = await prisma.round.findUnique({ where: { id } });
+  if (!round) return res.status(404).json({ error: "not found" });
+  if (round.status !== "DRAFT") return res.status(400).json({ error: "can only update draft rounds" });
+
+  const input = req.body as RoundInput;
+  const err = validateDraft(input);
+  if (err) return res.status(400).json({ error: err });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.hole.deleteMany({ where: { roundId: id } });
+    await tx.round.update({
+      where: { id },
+      data: {
+        course: input.course.trim(),
+        date: input.date ? new Date(input.date) : round.date,
+        holes: {
+          create: (input.holes ?? []).map((h) => ({
+            number: h.number,
+            par: h.par,
+            shots: { create: h.shots.map(shotData) },
+          })),
+        },
+      },
+    });
+  });
+
+  res.status(204).end();
+});
+
+// ── POST /:id/publish — validate and publish a draft ────────────────────────
+roundsRouter.post("/:id/publish", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+
+  const round = await prisma.round.findUnique({
+    where: { id },
+    include: { holes: { include: { shots: true } } },
+  });
+  if (!round) return res.status(404).json({ error: "not found" });
+  if (round.status !== "DRAFT") return res.status(400).json({ error: "round is already published" });
+
+  const asInput: RoundInput = {
+    course: round.course,
+    date: round.date.toISOString(),
+    holes: round.holes
+      .sort((a, b) => a.number - b.number)
+      .map((h) => ({
+        number: h.number,
+        par: h.par,
+        shots: h.shots
+          .sort((a, b) => a.shotNumber - b.shotNumber)
+          .map((s) => ({
+            shotNumber: s.shotNumber,
+            startLie: s.startLie as Lie,
+            startDistance: s.startDistance,
+            endLie: s.endLie as EndLie,
+            endDistance: s.endDistance,
+          })),
+      })),
+  };
+  const err = validate(asInput);
+  if (err) return res.status(400).json({ error: err });
+
+  await prisma.round.update({ where: { id }, data: { status: "PUBLISHED" } });
+
+  const published = await prisma.round.findUniqueOrThrow({
+    where: { id },
+    include: { holes: { include: { shots: true } } },
+  });
+  res.json(buildDetail(published));
+});
+
+// ── GET /:id ─────────────────────────────────────────────────────────────────
 roundsRouter.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
@@ -92,6 +267,18 @@ roundsRouter.get("/:id", async (req, res) => {
   if (!round) return res.status(404).json({ error: "not found" });
   res.json(buildDetail(round));
 });
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function shotData(s: { shotNumber: number; startLie: string; startDistance: number; endLie: string; endDistance: number }) {
+  return {
+    shotNumber: s.shotNumber,
+    startLie: s.startLie,
+    startDistance: s.startDistance,
+    endLie: s.endLie,
+    endDistance: s.endDistance,
+  };
+}
 
 type DbRound = Awaited<ReturnType<typeof prisma.round.findUniqueOrThrow>> & {
   holes: Array<{

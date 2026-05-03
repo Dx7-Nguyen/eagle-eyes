@@ -11,6 +11,7 @@ model Round {
   id        Int      @id @default(autoincrement())
   course    String
   date      DateTime @default(now())
+  status    String   @default("PUBLISHED")
   holes     Hole[]
   createdAt DateTime @default(now())
 }

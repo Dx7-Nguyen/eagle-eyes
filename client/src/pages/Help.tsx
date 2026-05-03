@@ -58,10 +58,42 @@ export function Help() {
               <li><strong>Dist</strong> — distance remaining after the shot</li>
             </ul>
           </li>
-          <li>Click <strong>holed</strong> on the shot that went in — this locks endLie to HOLE automatically.</li>
-          <li>Use <strong>+ Add shot</strong> to append shots; the next shot pre-fills from the previous end lie and distance.</li>
-          <li>Use <strong>+ Add hole</strong> to add more holes, then click <strong>Save round</strong>.</li>
+          <li>
+            Click <strong>holed</strong> on the shot that went in — this locks the end lie to HOLE.
+            The hole card shows a <strong>Complete</strong> badge once all shots are accounted for.
+          </li>
+          <li>Use <strong>+ Add shot</strong> to append shots; each new shot pre-fills from the previous end lie and distance.</li>
+          <li>Use <strong>+ Add hole</strong> to add more holes.</li>
+          <li>
+            When every hole is complete, click <strong>Finish round</strong>.
+            A confirmation prompt will appear — review the details and click <strong>Publish round</strong> to save it to your history.
+          </li>
         </ol>
+        <p className="text-[#4A6B57] mt-3">
+          <strong>Tip:</strong> distance fields start at 0. Click the field and backspace to clear it, then type your value. If you leave it blank, it defaults back to 0.
+        </p>
+      </Section>
+
+      <Section title="Saving Progress & Resuming a Round">
+        <p className="text-[#4A6B57] mb-3">
+          You don't have to finish a round in one sitting. Eagle Eyes lets you save your progress at any point and pick up where you left off.
+        </p>
+        <ol className="pl-5 space-y-1.5">
+          <li>
+            Click <strong>Save progress</strong> at any time — even with only one hole logged.
+            The round is saved as a draft and the URL updates to include a draft ID (e.g. <code className="bg-[#E8F5EE] px-1 rounded">/new?draft=3</code>).
+          </li>
+          <li>
+            To return to the round later, go to <strong>Rounds</strong> in the nav bar.
+            Any in-progress drafts appear in an <strong>In Progress</strong> section at the top, showing the course name, date, and number of holes logged so far.
+          </li>
+          <li>Click <strong>Continue →</strong> next to a draft to reopen the round form with all your holes and shots restored.</li>
+          <li>Keep adding holes and saving progress as you play. Each click of <strong>Save progress</strong> overwrites the previous draft.</li>
+          <li>Once every hole is marked complete, click <strong>Finish round</strong> and confirm to publish.</li>
+        </ol>
+        <p className="text-[#4A6B57] mt-3">
+          Drafts are not included in your Trends or round history until you publish them.
+        </p>
       </Section>
 
       <Section title="Distance Units">
@@ -108,7 +140,7 @@ export function Help() {
         <p className="text-[#4A6B57]">
           The <strong>Trends</strong> page charts your strokes gained by category over time.
           Use it to spot which part of your game is improving or needs work.
-          The zero line represents scratch-level baseline performance.
+          The zero line represents scratch-level baseline performance. Only published rounds appear in Trends.
         </p>
       </Section>
     </div>

@@ -55,3 +55,18 @@ export interface TrendPoint {
   sgByCategory: Record<Category, number>;
   sgTotal: number;
 }
+
+export interface DraftSummary {
+  id: number;
+  course: string;
+  date: string;
+  holeCount: number;
+}
+
+export interface RoundEditData {
+  id: number;
+  course: string;
+  date: string;
+  status: "DRAFT" | "PUBLISHED";
+  holes: HoleInput[];
+}
