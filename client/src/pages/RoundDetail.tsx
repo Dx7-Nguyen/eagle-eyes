@@ -16,7 +16,7 @@ function SGChip({ value, bold }: { value: number; bold?: boolean }) {
       size="sm"
       variant="flat"
       color={value >= 0 ? "success" : "danger"}
-      classNames={{ content: `text-xs ${bold ? "font-bold" : "font-semibold"}` }}
+      classNames={{ content: `font-mono tabular-nums text-xs ${bold ? "font-semibold" : "font-medium"}` }}
     >
       {fmtSG(value)}
     </Chip>
@@ -90,7 +90,7 @@ export function RoundDetail() {
               <p className="text-white/60 text-sm m-0">{fmtDate(round.date)}</p>
             </div>
             <div className="text-right">
-              <div className="text-white font-bold text-2xl">
+              <div className="text-white font-bold text-2xl font-mono tabular-nums">
                 {round.totalStrokes}{" "}
                 <span className={scoreDiff <= 0 ? "text-green-400" : "text-red-400"}>
                   ({scoreDiff >= 0 ? "+" : ""}{scoreDiff})
@@ -154,10 +154,12 @@ export function RoundDetail() {
                   <TableRow key={s.shotNumber}>
                     <TableCell>{s.shotNumber}</TableCell>
                     <TableCell>{s.startLie}</TableCell>
-                    <TableCell>{s.startDistance}{s.startLie === "GREEN" ? "ft" : "y"}</TableCell>
+                    <TableCell><span className="font-mono tabular-nums">{s.startDistance}{s.startLie === "GREEN" ? "ft" : "y"}</span></TableCell>
                     <TableCell>{s.endLie}</TableCell>
                     <TableCell>
-                      {s.endLie === "HOLE" ? "—" : `${s.endDistance}${s.endLie === "GREEN" ? "ft" : "y"}`}
+                      <span className="font-mono tabular-nums">
+                        {s.endLie === "HOLE" ? "—" : `${s.endDistance}${s.endLie === "GREEN" ? "ft" : "y"}`}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Chip size="sm" variant="dot" color="primary" classNames={{ content: "text-xs" }}>

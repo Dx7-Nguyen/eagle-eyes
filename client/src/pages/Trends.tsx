@@ -46,8 +46,8 @@ export function Trends() {
           <ResponsiveContainer width="100%" height={380}>
             <LineChart data={data} margin={{ top: 10, right: 24, bottom: 8, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8F5EE" />
-              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: '"Geist Mono", ui-monospace, monospace' }} />
+              <YAxis tick={{ fontSize: 11, fontFamily: '"Geist Mono", ui-monospace, monospace' }} />
               <Tooltip />
               <Legend />
               <ReferenceLine y={0} stroke="#C8DDD0" strokeWidth={1.5} />
