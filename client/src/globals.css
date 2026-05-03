@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+html { scroll-behavior: smooth; }
+
+.font-display-opt {
+  font-variation-settings: 'opsz' 144;
+}
+
 .hero-section {
   background:
     url('/azalea-purple.svg') top -30px right -30px   / 220px 220px no-repeat,
@@ -39,6 +45,8 @@
 .shot-input {
   width: 72px;
   font-size: 13px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
   padding: 4px 6px;
   border-radius: 6px;
   border: 1px solid #C8DDD0;

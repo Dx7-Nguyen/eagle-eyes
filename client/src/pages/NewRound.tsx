@@ -161,7 +161,7 @@ export function NewRound() {
               <tbody>
                 {h.shots.map((s, si) => (
                   <tr key={si} className="border-b border-[#E8F5EE] last:border-0 hover:bg-[#E8F5EE]/50">
-                    <td className="px-4 py-2 font-medium text-[#4A6B57]">{s.shotNumber}</td>
+                    <td className="px-4 py-2 font-mono tabular-nums font-medium text-[#4A6B57]">{s.shotNumber}</td>
                     <td className="px-4 py-2">
                       <select
                         value={s.startLie}

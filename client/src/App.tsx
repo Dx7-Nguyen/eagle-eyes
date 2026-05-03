@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink, Outlet } from "react-router-dom";
 import {
   Navbar,
   NavbarBrand,
@@ -32,9 +32,9 @@ function NavItem({ to, end, children }: { to: string; end?: boolean; children: R
   );
 }
 
-export function App() {
+function AppShell() {
   return (
-    <BrowserRouter>
+    <>
       <Navbar
         maxWidth="xl"
         className="bg-[#003D2B] border-b-2 border-[#F5D130] sticky top-0 z-50"
@@ -52,17 +52,26 @@ export function App() {
           <NavItem to="/help">Help</NavItem>
         </NavbarContent>
       </Navbar>
-
       <main className="max-w-6xl mx-auto px-6 py-7">
-        <Routes>
-          <Route path="/" element={<Landing />} />
+        <Outlet />
+      </main>
+    </>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route element={<AppShell />}>
           <Route path="/rounds" element={<Home />} />
           <Route path="/rounds/:id" element={<RoundDetail />} />
           <Route path="/new" element={<NewRound />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/help" element={<Help />} />
-        </Routes>
-      </main>
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }

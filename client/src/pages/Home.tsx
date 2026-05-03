@@ -15,7 +15,7 @@ function SGChip({ value }: { value: number }) {
       size="sm"
       variant="flat"
       color={value >= 0 ? "success" : "danger"}
-      classNames={{ content: "font-semibold text-xs" }}
+      classNames={{ content: "font-mono tabular-nums font-semibold text-xs" }}
     >
       {fmtSG(value)}
     </Chip>
@@ -97,11 +97,13 @@ export function Home() {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  {r.totalStrokes} (
-                  <span className={r.totalStrokes - r.totalPar <= 0 ? "text-success-600" : "text-danger-600"}>
-                    {r.totalStrokes - r.totalPar >= 0 ? "+" : ""}{r.totalStrokes - r.totalPar}
+                  <span className="font-mono tabular-nums">
+                    {r.totalStrokes} (
+                    <span className={r.totalStrokes - r.totalPar <= 0 ? "text-success-600" : "text-danger-600"}>
+                      {r.totalStrokes - r.totalPar >= 0 ? "+" : ""}{r.totalStrokes - r.totalPar}
+                    </span>
+                    )
                   </span>
-                  )
                 </TableCell>
                 <TableCell><SGChip value={r.sgByCategory.TEE} /></TableCell>
                 <TableCell><SGChip value={r.sgByCategory.APPROACH} /></TableCell>
@@ -111,7 +113,7 @@ export function Home() {
                   <Chip
                     size="sm" variant="flat"
                     color={r.sgTotal >= 0 ? "primary" : "danger"}
-                    classNames={{ content: "font-bold text-xs" }}
+                    classNames={{ content: "font-mono tabular-nums font-semibold text-xs" }}
                   >
                     {fmtSG(r.sgTotal)}
                   </Chip>
