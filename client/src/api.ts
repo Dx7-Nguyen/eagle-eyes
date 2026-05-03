@@ -10,11 +10,21 @@ import type {
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
+    credentials: "include",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`${res.status}: ${body}`);
+    let message = `${res.status}`;
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body?.error) message = body.error;
+    } catch {
+      message = await res.text().catch(() => `${res.status}`);
+    }
+    throw new Error(message);
+  }
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return undefined as T;
   }
   return res.json() as Promise<T>;
 }
@@ -28,9 +38,7 @@ export const api = {
       body: JSON.stringify(input),
     }),
   deleteRound: (id: number) =>
-    fetch(`/api/rounds/${id}`, { method: "DELETE" }).then((r) => {
-      if (!r.ok) throw new Error(`${r.status}`);
-    }),
+    http<void>(`/api/rounds/${id}`, { method: "DELETE" }),
   trends: () => http<TrendPoint[]>("/api/trends"),
 
   listDrafts: () => http<DraftSummary[]>("/api/rounds/drafts"),
@@ -41,11 +49,10 @@ export const api = {
       body: JSON.stringify(input),
     }),
   updateDraft: (id: number, input: RoundInput) =>
-    fetch(`/api/rounds/${id}`, {
+    http<void>(`/api/rounds/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
-    }).then((r) => { if (!r.ok) throw new Error(`${r.status}`); }),
+    }),
   publishRound: (id: number) =>
     http<RoundDetail>(`/api/rounds/${id}/publish`, { method: "POST" }),
 };

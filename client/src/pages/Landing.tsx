@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import styles from "./Landing.module.css";
+import { useAuth } from "../context/AuthContext.js";
 
 const MARQUEE_ITEMS = [
   "Strokes Gained: Tee",
@@ -24,10 +25,13 @@ function PlusIcon() {
 }
 
 export function Landing() {
+  const { user, loading } = useAuth();
   const az1Ref = useRef<HTMLImageElement>(null);
   const az2Ref = useRef<HTMLImageElement>(null);
   const az3Ref = useRef<HTMLImageElement>(null);
   const [scrolled, setScrolled] = useState(false);
+
+  if (!loading && user) return <Navigate to="/profile" replace />;
 
   useEffect(() => {
     document.body.style.overflowX = "hidden";
@@ -72,7 +76,8 @@ export function Landing() {
           <a className={styles.navLink} href="#features">Features</a>
           <a className={styles.navLink} href="#workflow">How it works</a>
           <a className={styles.navLink} href="#stats">By the numbers</a>
-          <a className={styles.navCta} href="#cta">Log a Round →</a>
+          <a className={styles.navLink} href="/login">Sign In</a>
+          <a className={styles.navCta} href="/register">Get Started →</a>
         </nav>
       </header>
 
@@ -102,9 +107,9 @@ export function Landing() {
             you strokes — and which is bleeding them — against a real PGA Tour baseline.
           </p>
           <div className={cn(styles.reveal, styles.d3)} style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <a className={cn(styles.btn, styles.btnPrimary)} href="#cta">
+            <a className={cn(styles.btn, styles.btnPrimary)} href="/register">
               <PlusIcon />
-              Log your first round
+              Get started free
             </a>
             <a className={cn(styles.btn, styles.btnGhost)} href="#features">
               See what you'll learn
@@ -424,9 +429,9 @@ export function Landing() {
               your game to spend Saturday morning on.
             </p>
             <div className={cn(styles.ctaRow, styles.reveal, styles.d3)}>
-              <Link className={cn(styles.btn, styles.btnYellow)} to="/new">
+              <Link className={cn(styles.btn, styles.btnYellow)} to="/register">
                 <PlusIcon />
-                Log your first round
+                Create your free account
               </Link>
               <a className={cn(styles.btn, styles.btnOutline)} href="#features">Learn the model</a>
             </div>
@@ -437,7 +442,7 @@ export function Landing() {
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <span><span className={styles.footerBrand}>Eagle Eyes</span> · A personal golf stat tracker</span>
-        <span>Built on React + Vite + Prisma · 2026</span>
+        <span>Created by Daniel Nguyen</span>
       </footer>
     </div>
   );

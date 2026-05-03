@@ -44,6 +44,35 @@ export function Help() {
     <div className="flex flex-col gap-5">
       <h2 className="text-[#003D2B] font-bold text-2xl m-0">How to Use Eagle Eyes</h2>
 
+      <Section title="Creating an Account">
+        <ol className="pl-5 space-y-1.5">
+          <li>
+            Go to the <strong>Get Started</strong> page (linked from the landing page or navigate to <code className="bg-[#E8F5EE] px-1 rounded">/register</code>).
+          </li>
+          <li>Enter your email address and create a password.</li>
+          <li>
+            Password requirements:
+            <ul className="pl-5 mt-1 space-y-0.5 list-disc">
+              <li>8 to 128 characters long</li>
+              <li>Letters (A–Z, a–z) and numbers (0–9) only — no special characters</li>
+            </ul>
+          </li>
+          <li>Click <strong>Create Account</strong>. You'll be signed in automatically.</li>
+        </ol>
+        <p className="text-[#4A6B57] mt-3">
+          Your rounds and stats are private — only you can see them after signing in.
+        </p>
+      </Section>
+
+      <Section title="Signing In & Out">
+        <ol className="pl-5 space-y-1.5">
+          <li>Navigate to <code className="bg-[#E8F5EE] px-1 rounded">/login</code> or click <strong>Sign In</strong> on the landing page.</li>
+          <li>Enter the email and password you registered with.</li>
+          <li>Your session lasts 7 days — you won't need to sign in again on the same device.</li>
+          <li>To sign out, click <strong>Sign Out</strong> in the top-right corner of the nav bar.</li>
+        </ol>
+      </Section>
+
       <Section title="Logging a Round">
         <ol className="pl-5 space-y-1.5">
           <li>Click <strong>New Round</strong> in the nav bar.</li>

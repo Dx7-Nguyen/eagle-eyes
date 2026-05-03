@@ -63,6 +63,12 @@ export interface DraftSummary {
   holeCount: number;
 }
 
+export interface AuthUser {
+  id: number;
+  email: string;
+  firstName: string;
+}
+
 export interface RoundEditData {
   id: number;
   course: string;

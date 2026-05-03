@@ -10,8 +10,11 @@ import type {
 } from "../../../shared/types/index.js";
 import { prisma } from "../lib/prisma.js";
 import { annotateHole, sumSG, sgTotal } from "../lib/strokes-gained.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const roundsRouter = Router();
+
+roundsRouter.use(requireAuth);
 
 const VALID_START_LIES: Lie[] = ["TEE", "FAIRWAY", "ROUGH", "SAND", "RECOVERY", "GREEN"];
 const VALID_END_LIES: EndLie[] = [...VALID_START_LIES, "HOLE"];
@@ -51,10 +54,10 @@ function validateDraft(input: RoundInput): string | null {
 }
 
 // ── GET /drafts — list draft rounds ─────────────────────────────────────────
-// Must be declared before /:id
-roundsRouter.get("/drafts", async (_req, res) => {
+roundsRouter.get("/drafts", async (req, res) => {
+  const userId = req.user!.userId;
   const rounds = await prisma.round.findMany({
-    where: { status: "DRAFT" },
+    where: { status: "DRAFT", userId },
     orderBy: { createdAt: "desc" },
     include: { holes: true },
   });
@@ -69,15 +72,17 @@ roundsRouter.get("/drafts", async (_req, res) => {
 
 // ── POST /draft — create a new draft ────────────────────────────────────────
 roundsRouter.post("/draft", async (req, res) => {
+  const userId = req.user!.userId;
   const input = req.body as RoundInput;
   const err = validateDraft(input);
-  if (err) return res.status(400).json({ error: err });
+  if (err) { res.status(400).json({ error: err }); return; }
 
   const created = await prisma.round.create({
     data: {
       course: input.course.trim(),
       date: input.date ? new Date(input.date) : new Date(),
       status: "DRAFT",
+      userId,
       holes: {
         create: (input.holes ?? []).map((h) => ({
           number: h.number,
@@ -99,9 +104,10 @@ roundsRouter.post("/draft", async (req, res) => {
 });
 
 // ── GET / — list published rounds ────────────────────────────────────────────
-roundsRouter.get("/", async (_req, res) => {
+roundsRouter.get("/", async (req, res) => {
+  const userId = req.user!.userId;
   const rounds = await prisma.round.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", userId },
     orderBy: { date: "desc" },
     include: { holes: { include: { shots: true } } },
   });
@@ -111,15 +117,17 @@ roundsRouter.get("/", async (_req, res) => {
 
 // ── POST / — create published round ─────────────────────────────────────────
 roundsRouter.post("/", async (req, res) => {
+  const userId = req.user!.userId;
   const input = req.body as RoundInput;
   const err = validate(input);
-  if (err) return res.status(400).json({ error: err });
+  if (err) { res.status(400).json({ error: err }); return; }
 
   const created = await prisma.round.create({
     data: {
       course: input.course.trim(),
       date: input.date ? new Date(input.date) : new Date(),
       status: "PUBLISHED",
+      userId,
       holes: {
         create: input.holes.map((h) => ({
           number: h.number,
@@ -136,24 +144,25 @@ roundsRouter.post("/", async (req, res) => {
 
 // ── DELETE /:id ──────────────────────────────────────────────────────────────
 roundsRouter.delete("/:id", async (req, res) => {
+  const userId = req.user!.userId;
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "invalid id" }); return; }
   const round = await prisma.round.findUnique({ where: { id } });
-  if (!round) return res.status(404).json({ error: "not found" });
+  if (!round || round.userId !== userId) { res.status(404).json({ error: "not found" }); return; }
   await prisma.round.delete({ where: { id } });
   res.status(204).end();
 });
 
 // ── GET /:id/edit — raw editable data for any round ──────────────────────────
-// Must be declared before GET /:id
 roundsRouter.get("/:id/edit", async (req, res) => {
+  const userId = req.user!.userId;
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "invalid id" }); return; }
   const round = await prisma.round.findUnique({
     where: { id },
     include: { holes: { include: { shots: true } } },
   });
-  if (!round) return res.status(404).json({ error: "not found" });
+  if (!round || round.userId !== userId) { res.status(404).json({ error: "not found" }); return; }
 
   const editData: RoundEditData = {
     id: round.id,
@@ -181,16 +190,17 @@ roundsRouter.get("/:id/edit", async (req, res) => {
 
 // ── PUT /:id — replace holes on a draft ─────────────────────────────────────
 roundsRouter.put("/:id", async (req, res) => {
+  const userId = req.user!.userId;
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "invalid id" }); return; }
 
   const round = await prisma.round.findUnique({ where: { id } });
-  if (!round) return res.status(404).json({ error: "not found" });
-  if (round.status !== "DRAFT") return res.status(400).json({ error: "can only update draft rounds" });
+  if (!round || round.userId !== userId) { res.status(404).json({ error: "not found" }); return; }
+  if (round.status !== "DRAFT") { res.status(400).json({ error: "can only update draft rounds" }); return; }
 
   const input = req.body as RoundInput;
   const err = validateDraft(input);
-  if (err) return res.status(400).json({ error: err });
+  if (err) { res.status(400).json({ error: err }); return; }
 
   await prisma.$transaction(async (tx) => {
     await tx.hole.deleteMany({ where: { roundId: id } });
@@ -215,15 +225,16 @@ roundsRouter.put("/:id", async (req, res) => {
 
 // ── POST /:id/publish — validate and publish a draft ────────────────────────
 roundsRouter.post("/:id/publish", async (req, res) => {
+  const userId = req.user!.userId;
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "invalid id" }); return; }
 
   const round = await prisma.round.findUnique({
     where: { id },
     include: { holes: { include: { shots: true } } },
   });
-  if (!round) return res.status(404).json({ error: "not found" });
-  if (round.status !== "DRAFT") return res.status(400).json({ error: "round is already published" });
+  if (!round || round.userId !== userId) { res.status(404).json({ error: "not found" }); return; }
+  if (round.status !== "DRAFT") { res.status(400).json({ error: "round is already published" }); return; }
 
   const asInput: RoundInput = {
     course: round.course,
@@ -245,7 +256,7 @@ roundsRouter.post("/:id/publish", async (req, res) => {
       })),
   };
   const err = validate(asInput);
-  if (err) return res.status(400).json({ error: err });
+  if (err) { res.status(400).json({ error: err }); return; }
 
   await prisma.round.update({ where: { id }, data: { status: "PUBLISHED" } });
 
@@ -258,13 +269,14 @@ roundsRouter.post("/:id/publish", async (req, res) => {
 
 // ── GET /:id ─────────────────────────────────────────────────────────────────
 roundsRouter.get("/:id", async (req, res) => {
+  const userId = req.user!.userId;
   const id = Number(req.params.id);
-  if (!Number.isInteger(id)) return res.status(400).json({ error: "invalid id" });
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "invalid id" }); return; }
   const round = await prisma.round.findUnique({
     where: { id },
     include: { holes: { include: { shots: true } } },
   });
-  if (!round) return res.status(404).json({ error: "not found" });
+  if (!round || round.userId !== userId) { res.status(404).json({ error: "not found" }); return; }
   res.json(buildDetail(round));
 });
 

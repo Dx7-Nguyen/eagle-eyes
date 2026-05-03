@@ -55,7 +55,7 @@ function emptyHole(number: number): HoleInput {
   return {
     number,
     par: 4,
-    shots: [{ shotNumber: 1, startLie: "TEE", startDistance: 380, endLie: "FAIRWAY", endDistance: 140 }],
+    shots: [{ shotNumber: 1, startLie: "TEE", startDistance: 0, endLie: "FAIRWAY", endDistance: 0 }],
   };
 }
 
@@ -171,11 +171,11 @@ export function NewRound() {
     try {
       if (draftId) {
         await api.updateDraft(draftId, { course, date: new Date(date).toISOString(), holes });
-        const published = await api.publishRound(draftId);
-        navigate(`/rounds/${published.id}`);
+        await api.publishRound(draftId);
+        navigate("/profile");
       } else {
-        const created = await api.createRound({ course, date: new Date(date).toISOString(), holes });
-        navigate(`/rounds/${created.id}`);
+        await api.createRound({ course, date: new Date(date).toISOString(), holes });
+        navigate("/profile");
       }
     } catch (e) {
       setError(String(e));
@@ -198,6 +198,12 @@ export function NewRound() {
           </span>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-3 rounded-xl font-medium">
+          {error}
+        </div>
+      )}
 
       {/* Course + date */}
       <div className="flex gap-4">
@@ -358,7 +364,6 @@ export function NewRound() {
           + Add hole
         </Button>
         <div className="flex gap-3 items-center">
-          {error && <span className="text-danger text-sm">{error}</span>}
           {saveConfirmed && !saving && (
             <span className="text-success-700 text-sm font-medium">Progress saved</span>
           )}
@@ -377,7 +382,6 @@ export function NewRound() {
             color="primary"
             size="sm"
             isLoading={submitting}
-            isDisabled={!course.trim() || !holesComplete || saving}
             onPress={() => setShowConfirm(true)}
           >
             Finish round
@@ -388,25 +392,48 @@ export function NewRound() {
       {/* Confirm publish modal */}
       <Modal isOpen={showConfirm} onClose={() => setShowConfirm(false)} size="sm">
         <ModalContent>
-          <ModalHeader className="text-[#003D2B]">Publish round?</ModalHeader>
+          <ModalHeader className="text-[#003D2B]">
+            {!course.trim() || !holesComplete ? "Round not complete" : "Publish round?"}
+          </ModalHeader>
           <ModalBody>
-            <p className="text-sm text-[#4A6B57]">
-              You're about to publish{" "}
-              <strong className="text-[#1A2E23]">{course}</strong>
-              {" "}({holes.length} {holes.length === 1 ? "hole" : "holes"}).
-              Once published it will appear in your round history and affect your trends.
-            </p>
-            <p className="text-sm text-[#4A6B57] mt-1">
-              You won't be able to edit shots after publishing.
-            </p>
+            {!course.trim() ? (
+              <p className="text-sm text-[#4A6B57]">
+                Please enter a <strong className="text-[#1A2E23]">course name</strong> before finishing your round.
+              </p>
+            ) : !holesComplete ? (
+              <>
+                <p className="text-sm text-[#4A6B57]">
+                  Not all holes are finished yet. For each hole, click{" "}
+                  <strong className="text-[#1A2E23]">holed</strong> on the shot that went in the hole.
+                </p>
+                <p className="text-sm text-[#4A6B57] mt-1">
+                  {holes.filter((h) => h.shots.length > 0 && h.shots[h.shots.length - 1].endLie === "HOLE").length}
+                  {" "}of {holes.length} {holes.length === 1 ? "hole" : "holes"} complete.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-[#4A6B57]">
+                  You're about to publish{" "}
+                  <strong className="text-[#1A2E23]">{course}</strong>
+                  {" "}({holes.length} {holes.length === 1 ? "hole" : "holes"}).
+                  Once published it will appear in your round history and affect your trends.
+                </p>
+                <p className="text-sm text-[#4A6B57] mt-1">
+                  You won't be able to edit shots after publishing.
+                </p>
+              </>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setShowConfirm(false)} isDisabled={submitting}>
-              Keep editing
+              {course.trim() && holesComplete ? "Keep editing" : "Go back"}
             </Button>
-            <Button color="primary" onPress={handlePublish} isLoading={submitting}>
-              Publish round
-            </Button>
+            {course.trim() && holesComplete && (
+              <Button color="primary" onPress={handlePublish} isLoading={submitting}>
+                Publish round
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>

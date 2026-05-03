@@ -7,12 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String   @default("")
+  createdAt DateTime @default(now())
+  rounds    Round[]
+}
+
 model Round {
   id        Int      @id @default(autoincrement())
   course    String
   date      DateTime @default(now())
   status    String   @default("PUBLISHED")
   holes     Hole[]
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
   createdAt DateTime @default(now())
 }
 
