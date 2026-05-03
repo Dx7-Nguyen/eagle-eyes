@@ -15,13 +15,13 @@ A golf stat tracker that logs rounds shot-by-shot, computes strokes gained by ca
 
 ## Tech stack
 
-| Layer | Tech |
-|---|---|
-| Frontend | React 18, Vite, HeroUI v2, Tailwind CSS v3, Recharts |
-| Backend | Node.js, Express, Prisma ORM |
-| Database | SQLite |
-| Auth | bcryptjs (password hashing), jsonwebtoken (JWT), httpOnly cookies |
-| Language | TypeScript (strict) throughout |
+| Layer    | Tech                                                              |
+| -------- | ----------------------------------------------------------------- |
+| Frontend | React 18, Vite, HeroUI v2, Tailwind CSS v3, Recharts              |
+| Backend  | Node.js, Express, Prisma ORM                                      |
+| Database | SQLite                                                            |
+| Auth     | bcryptjs (password hashing), jsonwebtoken (JWT), httpOnly cookies |
+| Language | TypeScript (strict) throughout                                    |
 
 ## Project structure
 
@@ -94,6 +94,7 @@ Eagle Eyes uses email + password authentication with JWT sessions stored in http
 ### Registering
 
 Navigate to `/register`. Enter your email and create a password that meets these requirements:
+
 - 8 to 128 characters
 - Letters (A–Z, a–z) and numbers (0–9) only — no special characters
 
@@ -103,23 +104,23 @@ Navigate to `/login` and enter your credentials. Your session persists for 7 day
 
 ### API endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/auth/register` | Create a new account |
-| `POST` | `/api/auth/login` | Sign in |
-| `POST` | `/api/auth/logout` | Sign out (clears cookie) |
-| `GET` | `/api/auth/me` | Get current user |
+| Method | Path                 | Description              |
+| ------ | -------------------- | ------------------------ |
+| `POST` | `/api/auth/register` | Create a new account     |
+| `POST` | `/api/auth/login`    | Sign in                  |
+| `POST` | `/api/auth/logout`   | Sign out (clears cookie) |
+| `GET`  | `/api/auth/me`       | Get current user         |
 
 All `/api/rounds` and `/api/trends` endpoints require a valid session cookie and return only the authenticated user's data.
 
 ## Strokes gained categories
 
-| Category | When assigned |
-|---|---|
-| **Tee** | Tee shots on par 4s and par 5s |
-| **Approach** | Tee shots on par 3s + any shot > 30 yards from a non-green lie |
+| Category       | When assigned                                                        |
+| -------------- | -------------------------------------------------------------------- |
+| **Tee**        | Tee shots on par 4s and par 5s                                       |
+| **Approach**   | Tee shots on par 3s + any shot > 30 yards from a non-green lie       |
 | **Short Game** | Shots ≤ 30 yards from a non-green lie (chips, pitches, bunker shots) |
-| **Putting** | Any shot starting on the green (distance in feet) |
+| **Putting**    | Any shot starting on the green (distance in feet)                    |
 
 SG for each shot = `expected_strokes(start) − expected_strokes(end) − 1`
 
