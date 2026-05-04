@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Button, Input, Card, CardBody, CardHeader, Divider, Checkbox } from "@heroui/react";
+import { Button, Input, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { useAuth } from "../context/AuthContext.js";
 
 const REMEMBER_KEY = "eagle_eyes_remembered_email";
@@ -96,16 +96,15 @@ export function Login() {
                 />
               </div>
 
-              <Checkbox
-                isSelected={rememberMe}
-                onValueChange={setRememberMe}
-                classNames={{
-                  label: "text-sm text-[#4A6B57]",
-                  wrapper: "before:border-[#C8DDD0] group-data-[selected=true]:before:bg-[#003D2B] group-data-[selected=true]:before:border-[#003D2B]",
-                }}
-              >
-                Remember me
-              </Checkbox>
+              <label className="flex items-center gap-2 cursor-pointer self-start">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-[#C8DDD0] accent-[#003D2B] cursor-pointer"
+                />
+                <span className="text-sm text-[#4A6B57]">Remember me</span>
+              </label>
 
               <Button
                 type="submit"
