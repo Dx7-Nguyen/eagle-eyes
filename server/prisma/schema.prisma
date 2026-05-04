@@ -21,6 +21,9 @@ model Round {
   id               Int      @id @default(autoincrement())
   course           String
   courseExternalId Int?
+  courseRating     Float?
+  slopeRating     Int?
+  teeName          String?
   date             DateTime @default(now())
   status           String   @default("PUBLISHED")
   holes            Hole[]

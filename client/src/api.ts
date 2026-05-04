@@ -6,6 +6,7 @@ import type {
   DraftSummary,
   TrendPoint,
   CourseSearchResult,
+  HandicapData,
 } from "../../shared/types/index.js";
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
@@ -59,4 +60,6 @@ export const api = {
 
   searchCourses: (q: string) =>
     http<CourseSearchResult[]>(`/api/courses/search?q=${encodeURIComponent(q)}`),
+
+  getHandicap: () => http<HandicapData>("/api/handicap"),
 };

@@ -82,7 +82,10 @@ export function Help() {
             <strong>Full Name</strong> — click <strong>Edit name</strong> to update your name, then <strong>Save</strong> to confirm. Press <code className="bg-[#E8F5EE] px-1 rounded">Esc</code> or <strong>Cancel</strong> to discard changes.
           </li>
           <li>
-            <strong>Gender</strong> — select Male, Female, or Not set from the dropdown. The change saves automatically.
+            <strong>Gender</strong> — select Male, Female, or Not set from the dropdown. The change saves automatically. Gender is also used to choose the correct tee set (men's or women's) when displaying course info on the New Round page.
+          </li>
+          <li>
+            <strong>Handicap Index</strong> — displayed as a stat card at the top of the Profile page. Calculated automatically from your published 18-hole rounds at API-matched courses. Shows "Pending — N more rounds needed" until at least 3 eligible rounds are logged.
           </li>
         </ul>
       </Section>
@@ -93,9 +96,19 @@ export function Help() {
           <li>
             Start typing the course name — Eagle Eyes searches a global course database and shows matches.
             Pick one to lock in the official name, or just type your own if your course isn't listed.
+            When a course is matched, a course info strip appears showing <strong>Par, Yards, Course Rating, Slope,</strong> and <strong>Holes</strong> for the selected tee.
+            If multiple tees are available, a <strong>Tee</strong> dropdown lets you switch (e.g. Blue, White, Red).
           </li>
           <li>Pick the date.</li>
-          <li>For each hole, set the par and enter shots one at a time.</li>
+          <li>
+            Choose your <strong>round type</strong> — <strong>Front 9</strong>, <strong>Back 9</strong>, or <strong>18 Holes</strong>.
+            This sets the hole numbering (Back 9 starts at hole 10) and limits how many holes you can add.
+          </li>
+          <li>
+            If a course was matched, all holes are <strong>pre-populated</strong> with the correct par and tee yardage as the starting distance.
+            Adjust any hole individually if needed.
+          </li>
+          <li>For each hole, enter shots one at a time.</li>
           <li>
             Each shot needs four values:
             <ul className="pl-5 mt-1 space-y-0.5 list-disc">
@@ -110,14 +123,14 @@ export function Help() {
             The hole card shows a <strong>Complete</strong> badge once all shots are accounted for.
           </li>
           <li>Use <strong>+ Add shot</strong> to append shots; each new shot pre-fills from the previous end lie and distance.</li>
-          <li>Use <strong>+ Add hole</strong> to add more holes.</li>
+          <li>Use <strong>+ Add hole</strong> to add more holes (up to the round type limit).</li>
           <li>
-            When every hole is complete, click <strong>Finish round</strong>.
+            When every hole is complete, click <strong>Finish round</strong> in the top-right of the page.
             A confirmation prompt will appear — review the details and click <strong>Publish round</strong> to save it to your history.
           </li>
         </ol>
         <p className="text-[#4A6B57] mt-3">
-          <strong>Tip:</strong> distance fields start at 0. Click the field and backspace to clear it, then type your value. If you leave it blank, it defaults back to 0.
+          <strong>Tip:</strong> distance fields are pre-filled from the selected tee when a course is matched. You can edit any value — click the field, backspace to clear it, and type your actual distance. Leaving it blank defaults back to 0.
         </p>
       </Section>
 
@@ -198,6 +211,31 @@ export function Help() {
             ["Putting", "Any shot starting on the green"],
           ]}
         />
+      </Section>
+
+      <Section title="Handicap Index">
+        <p className="text-[#4A6B57] mb-3">
+          Your <strong>Handicap Index</strong> appears on the Profile page and is calculated using the
+          official World Handicap System (WHS) formula from your published rounds.
+        </p>
+        <p className="text-[#4A6B57] mb-3">
+          For each eligible round, Eagle Eyes computes a <strong>score differential</strong>:
+        </p>
+        <div className="bg-[#E8F5EE] border border-[#C8DDD0] rounded-lg px-4 py-2 font-mono text-xs text-[#003D2B] mb-3">
+          Differential = (113 / Slope Rating) × (Adjusted Gross Score − Course Rating)
+        </div>
+        <p className="text-[#4A6B57] mb-3">
+          Adjusted Gross Score caps any hole at <strong>par + 5</strong> (the WHS Maximum Hole Score
+          for unestablished handicaps). Your index is then the average of the lowest differentials
+          from your most recent 20 eligible rounds, following the WHS lookup table (e.g. 3 rounds →
+          lowest 1 minus 2.0; 20 rounds → average of lowest 8).
+        </p>
+        <p className="text-[#4A6B57]">
+          <strong>Eligibility:</strong> only <strong>18-hole rounds</strong> at a course matched
+          from the Eagle Eyes course database (so we have official Course Rating and Slope) count.
+          9-hole rounds and free-text courses still log normally but don't affect the index.
+          You need at least <strong>3 eligible rounds</strong> to establish a handicap.
+        </p>
       </Section>
 
       <Section title="Trends">

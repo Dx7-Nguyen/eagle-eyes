@@ -32,8 +32,25 @@ export interface HoleResult {
 export interface RoundInput {
   course: string;
   courseExternalId?: number | null;
+  courseRating?: number | null;
+  slopeRating?: number | null;
+  teeName?: string | null;
   date?: string;
   holes: HoleInput[];
+}
+
+export interface HandicapData {
+  handicapIndex: number | null;
+  usedCount: number;
+  eligibleCount: number;
+  minRequired: 3;
+  differentials: Array<{
+    roundId: number;
+    date: string;
+    course: string;
+    differential: number;
+    used: boolean;
+  }>;
 }
 
 export interface CourseTeeHole {
@@ -100,6 +117,9 @@ export interface RoundEditData {
   id: number;
   course: string;
   courseExternalId: number | null;
+  courseRating: number | null;
+  slopeRating: number | null;
+  teeName: string | null;
   date: string;
   status: "DRAFT" | "PUBLISHED";
   holes: HoleInput[];

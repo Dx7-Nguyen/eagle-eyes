@@ -119,6 +119,19 @@ export function NewRound() {
         setCourseItems([{ id: data.courseExternalId, name: data.course }]);
         selectedCourseNameRef.current = data.course;
       }
+      if (data.teeName && data.courseRating != null && data.slopeRating != null) {
+        const synthetic: CourseTee = {
+          tee_name: data.teeName,
+          par_total: data.holes.reduce((s, h) => s + h.par, 0),
+          total_yards: data.holes.reduce((s, h) => s + (h.shots[0]?.startDistance ?? 0), 0),
+          course_rating: data.courseRating,
+          slope_rating: data.slopeRating,
+          number_of_holes: data.holes.length,
+          holes: data.holes.map((h) => ({ par: h.par, yardage: h.shots[0]?.startDistance ?? 0 })),
+        };
+        setAvailableTees([synthetic]);
+        setSelectedTeeIndex(0);
+      }
       setDate(data.date.slice(0, 10));
       setHoles(data.holes);
       setDraftId(id);
@@ -223,7 +236,13 @@ export function NewRound() {
     setError(null);
     setSaving(true);
     try {
-      const input = { course, courseExternalId, date: new Date(date).toISOString(), holes };
+      const tee = availableTees[selectedTeeIndex];
+      const input = {
+        course, courseExternalId, date: new Date(date).toISOString(), holes,
+        courseRating: tee?.course_rating ?? null,
+        slopeRating: tee?.slope_rating ?? null,
+        teeName: tee?.tee_name ?? null,
+      };
       if (draftId) {
         await api.updateDraft(draftId, input);
       } else {
@@ -244,7 +263,13 @@ export function NewRound() {
     setSubmitting(true);
     setShowConfirm(false);
     try {
-      const input = { course, courseExternalId, date: new Date(date).toISOString(), holes };
+      const tee = availableTees[selectedTeeIndex];
+      const input = {
+        course, courseExternalId, date: new Date(date).toISOString(), holes,
+        courseRating: tee?.course_rating ?? null,
+        slopeRating: tee?.slope_rating ?? null,
+        teeName: tee?.tee_name ?? null,
+      };
       if (draftId) {
         await api.updateDraft(draftId, input);
         await api.publishRound(draftId);

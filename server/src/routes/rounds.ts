@@ -23,6 +23,18 @@ function normalizeExternalId(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) ? value : null;
 }
 
+function normalizeRating(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeSlope(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) ? value : null;
+}
+
+function normalizeTeeName(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
 function validate(input: RoundInput): string | null {
   if (!input.course?.trim()) return "course is required";
   if (!Array.isArray(input.holes) || input.holes.length === 0) return "holes are required";
@@ -85,6 +97,9 @@ roundsRouter.post("/draft", async (req, res) => {
     data: {
       course: input.course.trim(),
       courseExternalId: normalizeExternalId(input.courseExternalId),
+      courseRating: normalizeRating(input.courseRating),
+      slopeRating: normalizeSlope(input.slopeRating),
+      teeName: normalizeTeeName(input.teeName),
       date: input.date ? new Date(input.date) : new Date(),
       status: "DRAFT",
       userId,
@@ -131,6 +146,9 @@ roundsRouter.post("/", async (req, res) => {
     data: {
       course: input.course.trim(),
       courseExternalId: normalizeExternalId(input.courseExternalId),
+      courseRating: normalizeRating(input.courseRating),
+      slopeRating: normalizeSlope(input.slopeRating),
+      teeName: normalizeTeeName(input.teeName),
       date: input.date ? new Date(input.date) : new Date(),
       status: "PUBLISHED",
       userId,
@@ -174,6 +192,9 @@ roundsRouter.get("/:id/edit", async (req, res) => {
     id: round.id,
     course: round.course,
     courseExternalId: round.courseExternalId,
+    courseRating: round.courseRating,
+    slopeRating: round.slopeRating,
+    teeName: round.teeName,
     date: round.date.toISOString(),
     status: round.status as "DRAFT" | "PUBLISHED",
     holes: round.holes
@@ -216,6 +237,9 @@ roundsRouter.put("/:id", async (req, res) => {
       data: {
         course: input.course.trim(),
         courseExternalId: normalizeExternalId(input.courseExternalId),
+        courseRating: normalizeRating(input.courseRating),
+        slopeRating: normalizeSlope(input.slopeRating),
+        teeName: normalizeTeeName(input.teeName),
         date: input.date ? new Date(input.date) : round.date,
         holes: {
           create: (input.holes ?? []).map((h) => ({

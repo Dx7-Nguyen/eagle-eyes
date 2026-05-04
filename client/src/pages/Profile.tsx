@@ -11,7 +11,7 @@ import {
 import { api } from "../api.js";
 import { fmtSG, fmtDate } from "../lib/format.js";
 import { useAuth } from "../context/AuthContext.js";
-import type { RoundSummary, DraftSummary, TrendPoint } from "../../../shared/types/index.js";
+import type { RoundSummary, DraftSummary, TrendPoint, HandicapData } from "../../../shared/types/index.js";
 
 function avg(nums: number[]) {
   if (nums.length === 0) return 0;
@@ -75,6 +75,7 @@ export function Profile() {
   const [rounds, setRounds] = useState<RoundSummary[] | null>(null);
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [trends, setTrends] = useState<TrendPoint[]>([]);
+  const [handicap, setHandicap] = useState<HandicapData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [draftDeleting, setDraftDeleting] = useState(false);
   const [draftTarget, setDraftTarget] = useState<DraftSummary | null>(null);
@@ -92,6 +93,7 @@ export function Profile() {
     api.listRounds().then(setRounds).catch((e) => setError(String(e)));
     api.listDrafts().then(setDrafts).catch(() => {});
     api.trends().then(setTrends).catch(() => {});
+    api.getHandicap().then(setHandicap).catch(() => {});
   }, []);
 
   if (error) return <p className="text-danger">{error}</p>;
@@ -102,9 +104,6 @@ export function Profile() {
 
   const avgSGTotal = avg(rounds.map((r) => r.sgTotal));
   const avgScoreToPar = avg(rounds.map((r) => r.totalStrokes - r.totalPar));
-  const bestRound = hasRounds
-    ? rounds.reduce((best, r) => (r.sgTotal > best.sgTotal ? r : best), rounds[0])
-    : null;
 
   const avgByCategory = {
     TEE: avg(rounds.map((r) => r.sgByCategory.TEE)),
@@ -223,10 +222,19 @@ export function Profile() {
           to={hasRounds ? "/trends" : undefined}
         />
         <StatCard
-          label="Best Round"
-          value={bestRound ? <SGValue value={r2(bestRound.sgTotal)} /> : "—"}
-          sub={bestRound ? `${bestRound.course} · ${fmtDate(bestRound.date)}` : "no data yet"}
-          to={bestRound ? `/rounds/${bestRound.id}` : undefined}
+          label="Handicap"
+          value={
+            handicap?.handicapIndex != null
+              ? <span className="text-[#003D2B]">{handicap.handicapIndex.toFixed(1)}</span>
+              : "—"
+          }
+          sub={
+            !handicap ? "loading…"
+            : handicap.handicapIndex != null
+              ? `from ${handicap.usedCount} of ${handicap.eligibleCount} round${handicap.eligibleCount !== 1 ? "s" : ""}`
+              : `${Math.max(0, handicap.minRequired - handicap.eligibleCount)} more 18-hole round${Math.max(0, handicap.minRequired - handicap.eligibleCount) !== 1 ? "s" : ""} needed`
+          }
+          to={handicap?.handicapIndex != null ? "/rounds" : undefined}
         />
       </div>
 
