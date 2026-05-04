@@ -10,7 +10,7 @@ A golf stat tracker that logs rounds shot-by-shot, computes strokes gained by ca
 - **Publish confirmation** — finishing a round opens a confirmation prompt before committing it to your history, so accidental saves don't pollute your data.
 - **Strokes gained** — each shot is benchmarked against a PGA Tour expected-strokes baseline and categorised into Tee, Approach, Short Game, and Putting.
 - **Trends** — line chart showing SG per category across all published rounds so you can see which part of your game is improving.
-- **Round management** — view shot-level detail for any round, or delete rounds you no longer need.
+- **Round management** — view shot-level detail for any round, delete published rounds from the history table or detail page, and delete in-progress drafts directly from the "In Progress" section before they are published.
 - **Marketing landing page** — full-screen landing page at `/` with scroll-reveal animations, parallax, and a marquee strip.
 
 ## Tech stack

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardBody, CardHeader, Button, Chip, Divider, Input } from "@heroui/react";
+import {
+  Card, CardBody, CardHeader, Button, Chip, Divider, Input,
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure,
+} from "@heroui/react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -73,6 +76,9 @@ export function Profile() {
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [trends, setTrends] = useState<TrendPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [draftDeleting, setDraftDeleting] = useState(false);
+  const [draftTarget, setDraftTarget] = useState<DraftSummary | null>(null);
+  const { isOpen: isDraftModalOpen, onOpen: onDraftModalOpen, onClose: onDraftModalClose } = useDisclosure();
 
   // Editable name state
   const [editName, setEditName] = useState("");
@@ -138,6 +144,21 @@ export function Profile() {
     setEditName(user?.firstName ?? "");
     setNameError("");
     setNameEditing(true);
+  }
+
+  async function handleDeleteDraft() {
+    if (!draftTarget) return;
+    setDraftDeleting(true);
+    try {
+      await api.deleteRound(draftTarget.id);
+      setDrafts((prev) => prev.filter((d) => d.id !== draftTarget.id));
+      onDraftModalClose();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setDraftDeleting(false);
+      setDraftTarget(null);
+    }
   }
 
   return (
@@ -356,9 +377,19 @@ export function Profile() {
                   {fmtDate(d.date)} · {d.holeCount} {d.holeCount === 1 ? "hole" : "holes"} logged
                 </span>
               </div>
-              <Button as={Link} to={`/new?draft=${d.id}`} size="sm" color="primary" variant="flat">
-                Continue →
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="light"
+                  color="danger"
+                  onPress={() => { setDraftTarget(d); onDraftModalOpen(); }}
+                >
+                  Delete
+                </Button>
+                <Button as={Link} to={`/new?draft=${d.id}`} size="sm" color="primary" variant="flat">
+                  Continue →
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -420,6 +451,23 @@ export function Profile() {
           </CardBody>
         </Card>
       )}
+
+      <Modal isOpen={isDraftModalOpen} onClose={onDraftModalClose} size="sm">
+        <ModalContent>
+          <ModalHeader className="text-[#003D2B]">Delete Draft</ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-[#4A6B57]">
+              Are you sure you want to delete{" "}
+              <strong className="text-[#1A2E23]">{draftTarget?.course || "Untitled round"}</strong>
+              {draftTarget?.date ? <> on {fmtDate(draftTarget.date)}</> : null}? This cannot be undone.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={onDraftModalClose} isDisabled={draftDeleting}>Cancel</Button>
+            <Button color="danger" onPress={handleDeleteDraft} isLoading={draftDeleting}>Delete</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
     </div>
   );
