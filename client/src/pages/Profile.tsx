@@ -325,9 +325,9 @@ export function Profile() {
           <Link to="/trends" className="no-underline md:col-span-2">
             <Card
               shadow="none"
-              className="border border-[#C8DDD0] hover:border-[#003D2B] transition-colors cursor-pointer h-full"
+              className="border border-[#C8DDD0] hover:border-[#003D2B] transition-colors cursor-pointer h-full overflow-hidden"
             >
-              <CardHeader className="bg-[#003D2B] px-5 py-3 rounded-t-xl flex items-center justify-between">
+              <CardHeader className="bg-[#003D2B] px-5 py-3 flex items-center justify-between">
                 <div>
                   <h3 className="text-[#F5D130] font-bold text-sm m-0">SG Total — Last 10 Rounds</h3>
                   <p className="text-white/50 text-xs m-0">Click to view full trends →</p>
@@ -358,9 +358,9 @@ export function Profile() {
           <Link to="/trends" className="no-underline">
             <Card
               shadow="none"
-              className="border border-[#C8DDD0] hover:border-[#003D2B] transition-colors cursor-pointer h-full"
+              className="border border-[#C8DDD0] hover:border-[#003D2B] transition-colors cursor-pointer h-full overflow-hidden"
             >
-              <CardHeader className="bg-[#003D2B] px-5 py-3 rounded-t-xl">
+              <CardHeader className="bg-[#003D2B] px-5 py-3">
                 <div>
                   <h3 className="text-[#F5D130] font-bold text-sm m-0">Avg SG by Category</h3>
                   <p className="text-white/50 text-xs m-0">Click to view full trends →</p>

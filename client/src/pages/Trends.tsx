@@ -35,8 +35,8 @@ export function Trends() {
   return (
     <div className="flex flex-col gap-5">
       <h2 className="text-[#003D2B] font-bold text-2xl m-0">Trends</h2>
-      <Card className="border border-[#C8DDD0]" shadow="none">
-        <CardHeader className="bg-[#003D2B] px-6 py-4 rounded-t-xl">
+      <Card className="border border-[#C8DDD0] overflow-hidden" shadow="none">
+        <CardHeader className="bg-[#003D2B] px-6 py-4">
           <div>
             <h3 className="text-[#F5D130] font-bold m-0">Strokes Gained by Category</h3>
             <p className="text-white/60 text-sm m-0">vs PGA Tour scratch baseline · positive = better</p>
