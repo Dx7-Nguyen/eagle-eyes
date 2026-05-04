@@ -27,7 +27,7 @@ export function Home() {
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [target, setTarget] = useState<RoundSummary | null>(null);
+  const [target, setTarget] = useState<{ id: number; course: string; date: string; isDraft?: boolean } | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
@@ -35,8 +35,8 @@ export function Home() {
     api.listDrafts().then(setDrafts).catch(() => {});
   }, []);
 
-  function confirmDelete(round: RoundSummary) {
-    setTarget(round);
+  function confirmDelete(item: { id: number; course: string; date: string }, isDraft?: boolean) {
+    setTarget({ ...item, isDraft });
     onOpen();
   }
 
@@ -45,7 +45,11 @@ export function Home() {
     setDeleting(true);
     try {
       await api.deleteRound(target.id);
-      setRounds((prev) => prev?.filter((r) => r.id !== target.id) ?? null);
+      if (target.isDraft) {
+        setDrafts((prev) => prev.filter((d) => d.id !== target.id));
+      } else {
+        setRounds((prev) => prev?.filter((r) => r.id !== target.id) ?? null);
+      }
       onClose();
     } catch (e) {
       setError(String(e));
@@ -80,15 +84,25 @@ export function Home() {
                   {fmtDate(d.date)} · {d.holeCount} {d.holeCount === 1 ? "hole" : "holes"} logged
                 </span>
               </div>
-              <Button
-                as={Link}
-                to={`/new?draft=${d.id}`}
-                size="sm"
-                color="primary"
-                variant="flat"
-              >
-                Continue →
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="light"
+                  color="danger"
+                  onPress={() => confirmDelete(d, true)}
+                >
+                  Delete
+                </Button>
+                <Button
+                  as={Link}
+                  to={`/new?draft=${d.id}`}
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                >
+                  Continue →
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -165,12 +179,14 @@ export function Home() {
 
       <Modal isOpen={isOpen} onClose={onClose} size="sm">
         <ModalContent>
-          <ModalHeader className="text-[#003D2B]">Delete Round</ModalHeader>
+          <ModalHeader className="text-[#003D2B]">
+            Delete {target?.isDraft ? "Draft" : "Round"}
+          </ModalHeader>
           <ModalBody>
             <p className="text-sm text-[#4A6B57]">
               Are you sure you want to delete{" "}
-              <strong className="text-[#1A2E23]">{target?.course}</strong> on{" "}
-              {target && fmtDate(target.date)}? This cannot be undone.
+              <strong className="text-[#1A2E23]">{target?.course || "Untitled round"}</strong>
+              {target?.date ? <> on {fmtDate(target.date)}</> : null}? This cannot be undone.
             </p>
           </ModalBody>
           <ModalFooter>

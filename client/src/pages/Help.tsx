@@ -125,6 +125,23 @@ export function Help() {
         </p>
       </Section>
 
+      <Section title="Deleting Rounds & Drafts">
+        <p className="text-[#4A6B57] mb-3">
+          You can delete any round or in-progress draft from the <strong>Rounds</strong> page.
+        </p>
+        <ul className="pl-5 space-y-1.5 list-disc">
+          <li>
+            <strong>In-progress drafts</strong> — click <strong>Delete</strong> next to the draft in the <strong>In Progress</strong> section. A confirmation prompt will appear before anything is removed.
+          </li>
+          <li>
+            <strong>Published rounds</strong> — click <strong>Delete</strong> in the row of the round you want to remove from the table, or use the <strong>Delete Round</strong> button on the round's detail page.
+          </li>
+        </ul>
+        <p className="text-[#4A6B57] mt-3">
+          Deletion is permanent and cannot be undone. Deleting a draft discards all logged holes and shots for that round.
+        </p>
+      </Section>
+
       <Section title="Distance Units">
         <HelpTable
           headers={["Lie", "Unit", "Example"]}
