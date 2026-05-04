@@ -5,10 +5,27 @@ import {
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
 } from "@heroui/react";
 import { api } from "../api";
-import type { Lie, EndLie, Shot, HoleInput, CourseSearchResult } from "../../../shared/types/index.js";
+import { useAuth } from "../context/AuthContext.js";
+import type { Lie, EndLie, Shot, HoleInput, CourseSearchResult, CourseTee } from "../../../shared/types/index.js";
 
 const START_LIES: Lie[] = ["TEE", "FAIRWAY", "ROUGH", "SAND", "RECOVERY", "GREEN"];
 const END_LIES: EndLie[] = [...START_LIES, "HOLE"];
+
+type RoundType = "F9" | "B9" | "18";
+
+function roundTypeStartHole(type: RoundType) { return type === "B9" ? 10 : 1; }
+function roundTypeMaxHoles(type: RoundType) { return type === "18" ? 18 : 9; }
+
+function buildHolesFromTee(tee: CourseTee, type: RoundType): HoleInput[] {
+  if (tee.holes.length === 0) return [emptyHole(roundTypeStartHole(type))];
+  const slice = type === "B9" ? tee.holes.slice(9, 18) : type === "F9" ? tee.holes.slice(0, 9) : tee.holes.slice(0, 18);
+  const start = roundTypeStartHole(type);
+  return slice.map((h, i) => ({
+    number: start + i,
+    par: h.par,
+    shots: [{ shotNumber: 1, startLie: "TEE", startDistance: h.yardage, endLie: "FAIRWAY", endDistance: 0 }],
+  }));
+}
 
 function DistanceInput({
   value,
@@ -63,6 +80,7 @@ export function NewRound() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const draftParam = searchParams.get("draft");
+  const { user } = useAuth();
 
   const [course, setCourse] = useState("");
   const [courseExternalId, setCourseExternalId] = useState<number | null>(null);
@@ -72,6 +90,11 @@ export function NewRound() {
   const [courseDropdownOpen, setCourseDropdownOpen] = useState(false);
   const selectedCourseNameRef = useRef<string | null>(null);
   const courseRequestIdRef = useRef(0);
+
+  const [availableTees, setAvailableTees] = useState<CourseTee[]>([]);
+  const [selectedTeeIndex, setSelectedTeeIndex] = useState(0);
+
+  const [roundType, setRoundType] = useState<RoundType>("18");
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [holes, setHoles] = useState<HoleInput[]>([emptyHole(1)]);
@@ -241,15 +264,40 @@ export function NewRound() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-[#003D2B] font-bold text-2xl m-0">
           {draftId ? "Continue Round" : "New Round"}
         </h2>
-        {draftId && (
-          <span className="text-xs font-medium text-[#4A6B57] bg-[#E8F5EE] px-3 py-1 rounded-full">
-            Draft saved
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {saveConfirmed && !saving && (
+            <span className="text-success-700 text-sm font-medium">Progress saved</span>
+          )}
+          <Button
+            as={Link} to="/rounds"
+            variant="bordered"
+            size="sm"
+            className="border-[#C8DDD0] text-[#4A6B57] font-semibold"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            isLoading={saving}
+            isDisabled={!course.trim() || submitting}
+            onPress={handleSaveProgress}
+            className="bg-[#00563F] text-[#F5D130] font-bold border border-[#004D39]"
+          >
+            Save progress
+          </Button>
+          <Button
+            size="sm"
+            isLoading={submitting}
+            onPress={() => setShowConfirm(true)}
+            className="bg-[#003D2B] text-[#F5D130] font-bold"
+          >
+            Finish round
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -271,6 +319,8 @@ export function NewRound() {
               if (v !== selectedCourseNameRef.current) {
                 setCourseExternalId(null);
                 selectedCourseNameRef.current = null;
+                setAvailableTees([]);
+                setSelectedTeeIndex(0);
               }
               setSaveConfirmed(false);
             }}
@@ -297,6 +347,11 @@ export function NewRound() {
                     selectedCourseNameRef.current = c.name;
                     setCourseDropdownOpen(false);
                     setSaveConfirmed(false);
+                    const gender = user?.gender === "female" ? "female" : "male";
+                    const tees = c.tees?.[gender] ?? c.tees?.male ?? c.tees?.female ?? [];
+                    setAvailableTees(tees);
+                    setSelectedTeeIndex(0);
+                    if (tees.length > 0) setHoles(buildHolesFromTee(tees[0], roundType));
                   }}
                 >
                   <div className="text-sm font-medium text-[#003D2B]">{c.name}</div>
@@ -310,15 +365,90 @@ export function NewRound() {
           <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Date</span>
           <Input
             type="date"
-          value={date}
-          onValueChange={(v) => { setDate(v); setSaveConfirmed(false); }}
-          classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
-          variant="bordered"
-          size="sm"
-          className="w-[180px]"
-        />
+            value={date}
+            onValueChange={(v) => { setDate(v); setSaveConfirmed(false); }}
+            classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
+            variant="bordered"
+            size="sm"
+            className="w-[180px]"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Holes</span>
+          <div className="flex border border-[#C8DDD0] rounded-lg overflow-hidden h-8">
+            {(["F9", "B9", "18"] as RoundType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => {
+                  setRoundType(type);
+                  const tee = availableTees[selectedTeeIndex];
+                  setHoles(tee ? buildHolesFromTee(tee, type) : [emptyHole(roundTypeStartHole(type))]);
+                  setSaveConfirmed(false);
+                }}
+                className={`px-3 text-xs font-semibold border-r border-[#C8DDD0] last:border-r-0 transition-colors ${
+                  roundType === type
+                    ? "bg-[#003D2B] text-[#F5D130]"
+                    : "bg-white text-[#4A6B57] hover:bg-[#E8F5EE]"
+                }`}
+              >
+                {type === "F9" ? "Front 9" : type === "B9" ? "Back 9" : "18 Holes"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Course info strip */}
+      {availableTees.length > 0 && (() => {
+        const tee = availableTees[selectedTeeIndex] ?? availableTees[0];
+        return (
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-[#F0F7F4] border border-[#C8DDD0] rounded-xl">
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Tee</span>
+              {availableTees.length === 1 ? (
+                <span className="text-sm font-semibold text-[#003D2B]">{tee.tee_name}</span>
+              ) : (
+                <select
+                  value={selectedTeeIndex}
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    setSelectedTeeIndex(idx);
+                    setHoles(buildHolesFromTee(availableTees[idx], roundType));
+                    setSaveConfirmed(false);
+                  }}
+                  className="text-sm font-semibold text-[#003D2B] border border-[#C8DDD0] rounded-lg px-2 py-0.5 bg-white hover:border-[#003D2B] focus:outline-none focus:border-[#003D2B] cursor-pointer"
+                >
+                  {availableTees.map((t, i) => (
+                    <option key={i} value={i}>{t.tee_name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Par</span>
+              <span className="text-sm font-bold text-[#003D2B]">{tee.par_total}</span>
+            </div>
+            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Yards</span>
+              <span className="text-sm font-bold text-[#003D2B]">{tee.total_yards.toLocaleString()}</span>
+            </div>
+            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Rating</span>
+              <span className="text-sm font-bold text-[#003D2B]">{tee.course_rating}</span>
+              <span className="text-xs text-[#4A6B57]">/ {tee.slope_rating}</span>
+            </div>
+            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Holes</span>
+              <span className="text-sm font-bold text-[#003D2B]">{tee.number_of_holes}</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Holes */}
       {holes.map((h, hi) => (
@@ -445,39 +575,16 @@ export function NewRound() {
       ))}
 
       {/* Footer actions */}
-      <div className="flex justify-between items-center pt-2 border-t border-[#C8DDD0]">
+      <div className="flex items-center pt-2 border-t border-[#C8DDD0]">
         <Button
           variant="bordered"
           color="primary"
           size="sm"
-          onPress={() => setHoles((p) => [...p, emptyHole(p.length + 1)])}
+          isDisabled={holes.length >= roundTypeMaxHoles(roundType)}
+          onPress={() => setHoles((p) => [...p, emptyHole(roundTypeStartHole(roundType) + p.length)])}
         >
           + Add hole
         </Button>
-        <div className="flex gap-3 items-center">
-          {saveConfirmed && !saving && (
-            <span className="text-success-700 text-sm font-medium">Progress saved</span>
-          )}
-          <Button as={Link} to="/rounds" variant="light" color="default" size="sm">Cancel</Button>
-          <Button
-            variant="bordered"
-            color="primary"
-            size="sm"
-            isLoading={saving}
-            isDisabled={!course.trim() || submitting}
-            onPress={handleSaveProgress}
-          >
-            Save progress
-          </Button>
-          <Button
-            color="primary"
-            size="sm"
-            isLoading={submitting}
-            onPress={() => setShowConfirm(true)}
-          >
-            Finish round
-          </Button>
-        </div>
       </div>
 
       {/* Confirm publish modal */}

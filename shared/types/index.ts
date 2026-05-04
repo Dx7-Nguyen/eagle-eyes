@@ -36,10 +36,29 @@ export interface RoundInput {
   holes: HoleInput[];
 }
 
+export interface CourseTeeHole {
+  par: number;
+  yardage: number;
+}
+
+export interface CourseTee {
+  tee_name: string;
+  par_total: number;
+  total_yards: number;
+  course_rating: number;
+  slope_rating: number;
+  number_of_holes: number;
+  holes: CourseTeeHole[];
+}
+
 export interface CourseSearchResult {
   id: number;
   name: string;
   location?: string;
+  tees?: {
+    male?: CourseTee[];
+    female?: CourseTee[];
+  };
 }
 
 export interface RoundSummary {
