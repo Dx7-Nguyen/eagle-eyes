@@ -4,7 +4,7 @@ import type { AuthUser } from "../../../shared/types/index.js";
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (email: string, password: string, firstName: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (firstName: string) => Promise<void>;
@@ -25,11 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string, rememberMe = false) {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));

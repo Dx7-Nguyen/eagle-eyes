@@ -8,10 +8,15 @@ export const authRouter = Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_RE = /^[a-zA-Z0-9]{8,128}$/;
 
-const COOKIE_OPTS = {
+const SESSION_COOKIE_OPTS = {
   httpOnly: true,
   sameSite: "lax" as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const REMEMBER_COOKIE_OPTS = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
 function userResponse(user: { id: number; email: string; firstName: string; gender: string }) {
@@ -51,12 +56,12 @@ authRouter.post("/register", async (req, res) => {
   });
 
   const token = signToken({ userId: user.id, email: user.email });
-  res.cookie("token", token, COOKIE_OPTS);
+  res.cookie("token", token, SESSION_COOKIE_OPTS);
   res.status(201).json(userResponse(user));
 });
 
 authRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body as { email?: string; password?: string };
+  const { email, password, rememberMe } = req.body as { email?: string; password?: string; rememberMe?: boolean };
 
   if (!email || !password) {
     res.status(400).json({ error: "Email and password are required" });
@@ -75,8 +80,8 @@ authRouter.post("/login", async (req, res) => {
     return;
   }
 
-  const token = signToken({ userId: user.id, email: user.email });
-  res.cookie("token", token, COOKIE_OPTS);
+  const token = signToken({ userId: user.id, email: user.email }, rememberMe ? "30d" : "1d");
+  res.cookie("token", token, rememberMe ? REMEMBER_COOKIE_OPTS : SESSION_COOKIE_OPTS);
   res.json(userResponse(user));
 });
 

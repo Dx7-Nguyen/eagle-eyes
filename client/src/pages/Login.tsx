@@ -1,15 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Button, Input, Card, CardBody, CardHeader, Divider } from "@heroui/react";
+import { Button, Input, Card, CardBody, CardHeader, Divider, Checkbox } from "@heroui/react";
 import { useAuth } from "../context/AuthContext.js";
+
+const REMEMBER_KEY = "eagle_eyes_remembered_email";
 
 export function Login() {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   if (loading) return null;
   if (user) return <Navigate to="/profile" replace />;
@@ -19,7 +30,12 @@ export function Login() {
     setError("");
     setSubmitting(true);
     try {
-      await login(email, password);
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, email);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+      await login(email, password, rememberMe);
       navigate("/profile");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
@@ -79,6 +95,17 @@ export function Login() {
                   isRequired
                 />
               </div>
+
+              <Checkbox
+                isSelected={rememberMe}
+                onValueChange={setRememberMe}
+                classNames={{
+                  label: "text-sm text-[#4A6B57]",
+                  wrapper: "before:border-[#C8DDD0] group-data-[selected=true]:before:bg-[#003D2B] group-data-[selected=true]:before:border-[#003D2B]",
+                }}
+              >
+                Remember me
+              </Checkbox>
 
               <Button
                 type="submit"

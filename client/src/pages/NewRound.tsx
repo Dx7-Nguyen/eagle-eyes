@@ -68,6 +68,8 @@ function distUnit(lie: Lie | EndLie) {
   return lie === "GREEN" ? "ft" : "y";
 }
 
+const courseQueryCache = new Map<string, CourseSearchResult[]>();
+
 function emptyHole(number: number): HoleInput {
   return {
     number,
@@ -153,6 +155,14 @@ export function NewRound() {
     }
 
     const controller = new AbortController();
+    const cacheKey = query.toLowerCase();
+    const cached = courseQueryCache.get(cacheKey);
+    if (cached) {
+      setCourseItems(cached);
+      if (cached.length > 0) setCourseDropdownOpen(true);
+      return;
+    }
+
     const reqId = ++courseRequestIdRef.current;
     setCourseLoading(true);
 
@@ -161,6 +171,7 @@ export function NewRound() {
         const results = await api.searchCourses(query);
         if (controller.signal.aborted) return;
         if (reqId !== courseRequestIdRef.current) return;
+        courseQueryCache.set(cacheKey, results);
         setCourseItems(results);
         if (results.length > 0) setCourseDropdownOpen(true);
       } catch {
