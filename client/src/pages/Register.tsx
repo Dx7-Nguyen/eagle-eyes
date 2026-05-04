@@ -73,48 +73,56 @@ export function Register() {
                 </div>
               )}
 
-              <Input
-                label="Full Name"
-                type="text"
-                value={firstName}
-                onValueChange={setFirstName}
-                placeholder="Daniel Nguyen"
-                variant="bordered"
-                classNames={inputClass}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Full Name</span>
+                <Input
+                  type="text"
+                  value={firstName}
+                  onValueChange={setFirstName}
+                  placeholder="Daniel Nguyen"
+                  variant="bordered"
+                  classNames={inputClass}
+                  isRequired
+                />
+              </div>
 
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onValueChange={setEmail}
-                placeholder="you@example.com"
-                variant="bordered"
-                classNames={inputClass}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Email</span>
+                <Input
+                  type="email"
+                  value={email}
+                  onValueChange={setEmail}
+                  placeholder="you@example.com"
+                  variant="bordered"
+                  classNames={inputClass}
+                  isRequired
+                />
+              </div>
 
-              <Input
-                label="Password"
-                type="password"
-                value={password}
-                onValueChange={setPassword}
-                description="8–128 characters · letters and numbers only"
-                variant="bordered"
-                classNames={{ ...inputClass, description: "text-[#4A6B57]" }}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Password</span>
+                <Input
+                  type="password"
+                  value={password}
+                  onValueChange={setPassword}
+                  variant="bordered"
+                  classNames={inputClass}
+                  isRequired
+                />
+                <span className="text-xs text-[#4A6B57]">8–128 characters · letters and numbers only</span>
+              </div>
 
-              <Input
-                label="Confirm Password"
-                type="password"
-                value={confirm}
-                onValueChange={setConfirm}
-                variant="bordered"
-                classNames={inputClass}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Confirm Password</span>
+                <Input
+                  type="password"
+                  value={confirm}
+                  onValueChange={setConfirm}
+                  variant="bordered"
+                  classNames={inputClass}
+                  isRequired
+                />
+              </div>
 
               <Button
                 type="submit"

@@ -51,32 +51,34 @@ export function Login() {
                 </div>
               )}
 
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onValueChange={setEmail}
-                placeholder="you@example.com"
-                variant="bordered"
-                classNames={{
-                  inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B]",
-                  label: "text-[#1A2E23]",
-                }}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Email</span>
+                <Input
+                  type="email"
+                  value={email}
+                  onValueChange={setEmail}
+                  placeholder="you@example.com"
+                  variant="bordered"
+                  classNames={{
+                    inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B]",
+                  }}
+                  isRequired
+                />
+              </div>
 
-              <Input
-                label="Password"
-                type="password"
-                value={password}
-                onValueChange={setPassword}
-                variant="bordered"
-                classNames={{
-                  inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B]",
-                  label: "text-[#1A2E23]",
-                }}
-                isRequired
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-[#1A2E23]">Password</span>
+                <Input
+                  type="password"
+                  value={password}
+                  onValueChange={setPassword}
+                  variant="bordered"
+                  classNames={{
+                    inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B]",
+                  }}
+                  isRequired
+                />
+              </div>
 
               <Button
                 type="submit"

@@ -8,8 +8,11 @@ const MARQUEE_ITEMS = [
   "Strokes Gained: Approach",
   "Strokes Gained: Short Game",
   "Strokes Gained: Putting",
+  "Official WHS Handicap Index",
   "Round-by-round trends",
+  "40,000+ course database",
   "PGA Tour baseline",
+  "Front 9 · Back 9 · 18 Holes",
 ];
 
 function cn(...classes: (string | undefined | false)[]) {
@@ -271,26 +274,24 @@ export function Landing() {
             <div className={cn(styles.feature, styles.reveal, styles.d3)}>
               <div className={styles.ficon}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 22V4" /><path d="M5 4 L19 7 L5 11" /><circle cx="5" cy="22" r="1.2" fill="currentColor" />
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
                 </svg>
               </div>
-              <h3 className={styles.ftitle}>Six lie types, one truth.</h3>
+              <h3 className={styles.ftitle}>Your official handicap, automatically.</h3>
               <p className={styles.fbody}>
-                Tee, Fairway, Rough, Sand, Recovery, Green — distance in yards everywhere
-                except the green, where it's feet. Every shot lands in the right bucket.
+                Eagle Eyes calculates your WHS Handicap Index from every eligible published round using official Course Rating and Slope. Score differentials are computed per the WHS formula — three rounds in, you have a real number.
               </p>
             </div>
 
             <div className={cn(styles.feature, styles.reveal, styles.d4)}>
               <div className={styles.ficon}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 12l3 3 5-7" /><circle cx="12" cy="12" r="9" />
+                  <circle cx="12" cy="10" r="3" /><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                 </svg>
               </div>
-              <h3 className={styles.ftitle}>Yours forever, on your machine.</h3>
+              <h3 className={styles.ftitle}>40,000+ courses, loaded instantly.</h3>
               <p className={styles.fbody}>
-                Local-first. No subscription, no ads, no upselling. Your rounds, your data,
-                your improvement.
+                Search any course and Eagle Eyes pulls in par, total yards, Course Rating, and Slope for your tee — men's or women's. Holes pre-fill with the right par and yardage so you can start logging shots immediately.
               </p>
             </div>
           </div>
@@ -309,8 +310,8 @@ export function Landing() {
               <div className={styles.step}>
                 <span className={styles.stepNum}>01</span>
                 <div>
-                  <h4 className={styles.stepTitle}>Add a hole.</h4>
-                  <p className={styles.stepBody}>Set the par. The first shot starts on the tee at a sensible default — change it if you want.</p>
+                  <h4 className={styles.stepTitle}>Pick your course.</h4>
+                  <p className={styles.stepBody}>Search from 40,000+ courses. Select your tee and round type (Front 9, Back 9, 18 Holes) — every hole pre-fills with the official par and yardage.</p>
                 </div>
               </div>
               <div className={styles.step}>
@@ -332,8 +333,8 @@ export function Landing() {
               <div className={styles.step}>
                 <span className={styles.stepNum}>04</span>
                 <div>
-                  <h4 className={styles.stepTitle}>Save the round.</h4>
-                  <p className={styles.stepBody}>Strokes gained are computed instantly across all four categories. The trend line updates the moment you save.</p>
+                  <h4 className={styles.stepTitle}>Publish and watch it all update.</h4>
+                  <p className={styles.stepBody}>Strokes gained compute instantly across all four categories. Your trend line and WHS Handicap Index update the moment you publish.</p>
                 </div>
               </div>
             </div>
@@ -385,9 +386,9 @@ export function Landing() {
           </p>
           <div className={cn(styles.metricsBand, styles.reveal, styles.d3)}>
             {([
-              { num: "6",    lab: "Lie types modelled"  },
-              { num: "4",    lab: "SG categories"       },
-              { num: "~12s", lab: "Per shot logged"     },
+              { num: "40k+", lab: "Courses in database"   },
+              { num: "4",    lab: "SG categories"         },
+              { num: "3",    lab: "Rounds to a handicap"  },
               { num: "0",    lab: "Subscription. Forever." },
             ] as const).map(m => (
               <div key={m.lab} className={styles.mbCell}>
