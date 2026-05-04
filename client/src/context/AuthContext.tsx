@@ -8,6 +8,7 @@ interface AuthContextValue {
   register: (email: string, password: string, firstName: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (firstName: string) => Promise<void>;
+  updateGender: (gender: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -68,8 +69,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((await res.json()) as AuthUser);
   }
 
+  async function updateGender(gender: string) {
+    const res = await fetch("/api/auth/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gender }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error((body as { error?: string }).error ?? "Update failed");
+    }
+    setUser((await res.json()) as AuthUser);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updateGender }}>
       {children}
     </AuthContext.Provider>
   );

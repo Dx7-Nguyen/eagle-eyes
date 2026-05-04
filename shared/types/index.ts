@@ -31,8 +31,15 @@ export interface HoleResult {
 
 export interface RoundInput {
   course: string;
+  courseExternalId?: number | null;
   date?: string;
   holes: HoleInput[];
+}
+
+export interface CourseSearchResult {
+  id: number;
+  name: string;
+  location?: string;
 }
 
 export interface RoundSummary {
@@ -67,11 +74,13 @@ export interface AuthUser {
   id: number;
   email: string;
   firstName: string;
+  gender: string;
 }
 
 export interface RoundEditData {
   id: number;
   course: string;
+  courseExternalId: number | null;
   date: string;
   status: "DRAFT" | "PUBLISHED";
   holes: HoleInput[];

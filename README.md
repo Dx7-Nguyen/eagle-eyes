@@ -4,9 +4,11 @@ A golf stat tracker that logs rounds shot-by-shot, computes strokes gained by ca
 
 ## Features
 
-- **Account registration & login** — register with your email and an alphanumeric password. Sessions last 7 days via a secure httpOnly cookie. All data is scoped to your account.
+- **Account registration & login** — register with your full name, email, and an alphanumeric password. Sessions last 7 days via a secure httpOnly cookie. All data is scoped to your account.
+- **Profile management** — update your full name and gender (Male / Female) from the Profile page at any time.
+- **Course search** — powered by the GolfCourseAPI: start typing a course name when logging a round and pick from live suggestions. Selecting a course stores the official name and its external ID for future enrichment. Free-text entry still works for unlisted courses.
 - **Round logging** — enter every shot with starting lie, distance to hole, and result. Shots chain automatically (next shot's start pre-fills from the previous end).
-- **Save progress & resume** — save a round as a draft at any point and pick up where you left off. Drafts appear in an "In Progress" section on the Rounds page with a Continue link. Only published rounds affect stats and trends.
+- **Save progress & resume** — save a round as a draft at any point and pick up where you left off. Drafts appear in an "In Progress" section on the Rounds and Profile pages with Continue and Delete links. Only published rounds affect stats and trends.
 - **Publish confirmation** — finishing a round opens a confirmation prompt before committing it to your history, so accidental saves don't pollute your data.
 - **Strokes gained** — each shot is benchmarked against a PGA Tour expected-strokes baseline and categorised into Tee, Approach, Short Game, and Putting.
 - **Trends** — line chart showing SG per category across all published rounds so you can see which part of your game is improving.
@@ -40,7 +42,7 @@ eagle-eyes/
 │   └── src/
 │       ├── lib/     # Prisma client, bcrypt/JWT utils, baselines, SG calculator
 │       ├── middleware/ # requireAuth JWT middleware
-│       └── routes/  # /api/auth, /api/rounds, /api/trends
+│       └── routes/  # /api/auth, /api/rounds, /api/trends, /api/courses
 └── shared/
     └── types/       # Shared TypeScript types (Round, Shot, SG, AuthUser, etc.)
 ```
@@ -63,7 +65,7 @@ cd server && npm install && cd ..
 # Configure environment
 cd server
 cp .env.example .env
-# Edit .env and set a strong JWT_SECRET value
+# Edit .env — set a strong JWT_SECRET and add your GOLF_COURSE_API_KEY
 
 # Run the database migration
 npx prisma migrate dev --name init
@@ -93,7 +95,7 @@ Eagle Eyes uses email + password authentication with JWT sessions stored in http
 
 ### Registering
 
-Navigate to `/register`. Enter your email and create a password that meets these requirements:
+Navigate to `/register`. Enter your full name, email, and create a password that meets these requirements:
 
 - 8 to 128 characters
 - Letters (A–Z, a–z) and numbers (0–9) only — no special characters
@@ -104,14 +106,16 @@ Navigate to `/login` and enter your credentials. Your session persists for 7 day
 
 ### API endpoints
 
-| Method | Path                 | Description              |
-| ------ | -------------------- | ------------------------ |
-| `POST` | `/api/auth/register` | Create a new account     |
-| `POST` | `/api/auth/login`    | Sign in                  |
-| `POST` | `/api/auth/logout`   | Sign out (clears cookie) |
-| `GET`  | `/api/auth/me`       | Get current user         |
+| Method    | Path                    | Description                        |
+| --------- | ----------------------- | ---------------------------------- |
+| `POST`    | `/api/auth/register`    | Create a new account               |
+| `POST`    | `/api/auth/login`       | Sign in                            |
+| `POST`    | `/api/auth/logout`      | Sign out (clears cookie)           |
+| `GET`     | `/api/auth/me`          | Get current user                   |
+| `PATCH`   | `/api/auth/profile`     | Update full name and/or gender     |
+| `GET`     | `/api/courses/search`   | Search courses via GolfCourseAPI   |
 
-All `/api/rounds` and `/api/trends` endpoints require a valid session cookie and return only the authenticated user's data.
+All `/api/rounds`, `/api/trends`, and `/api/courses` endpoints require a valid session cookie and return only the authenticated user's data.
 
 ## Strokes gained categories
 

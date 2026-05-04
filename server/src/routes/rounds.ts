@@ -19,6 +19,10 @@ roundsRouter.use(requireAuth);
 const VALID_START_LIES: Lie[] = ["TEE", "FAIRWAY", "ROUGH", "SAND", "RECOVERY", "GREEN"];
 const VALID_END_LIES: EndLie[] = [...VALID_START_LIES, "HOLE"];
 
+function normalizeExternalId(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) ? value : null;
+}
+
 function validate(input: RoundInput): string | null {
   if (!input.course?.trim()) return "course is required";
   if (!Array.isArray(input.holes) || input.holes.length === 0) return "holes are required";
@@ -80,6 +84,7 @@ roundsRouter.post("/draft", async (req, res) => {
   const created = await prisma.round.create({
     data: {
       course: input.course.trim(),
+      courseExternalId: normalizeExternalId(input.courseExternalId),
       date: input.date ? new Date(input.date) : new Date(),
       status: "DRAFT",
       userId,
@@ -125,6 +130,7 @@ roundsRouter.post("/", async (req, res) => {
   const created = await prisma.round.create({
     data: {
       course: input.course.trim(),
+      courseExternalId: normalizeExternalId(input.courseExternalId),
       date: input.date ? new Date(input.date) : new Date(),
       status: "PUBLISHED",
       userId,
@@ -167,6 +173,7 @@ roundsRouter.get("/:id/edit", async (req, res) => {
   const editData: RoundEditData = {
     id: round.id,
     course: round.course,
+    courseExternalId: round.courseExternalId,
     date: round.date.toISOString(),
     status: round.status as "DRAFT" | "PUBLISHED",
     holes: round.holes
@@ -208,6 +215,7 @@ roundsRouter.put("/:id", async (req, res) => {
       where: { id },
       data: {
         course: input.course.trim(),
+        courseExternalId: normalizeExternalId(input.courseExternalId),
         date: input.date ? new Date(input.date) : round.date,
         holes: {
           create: (input.holes ?? []).map((h) => ({

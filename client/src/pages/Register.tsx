@@ -29,7 +29,7 @@ export function Register() {
     e.preventDefault();
     setError("");
 
-    if (!firstName.trim()) { setError("First name is required"); return; }
+    if (!firstName.trim()) { setError("Full name is required"); return; }
     const pwErr = validatePassword(password);
     if (pwErr) { setError(pwErr); return; }
     if (password !== confirm) { setError("Passwords do not match"); return; }
@@ -74,11 +74,11 @@ export function Register() {
               )}
 
               <Input
-                label="First Name"
+                label="Full Name"
                 type="text"
                 value={firstName}
                 onValueChange={setFirstName}
-                placeholder="Daniel"
+                placeholder="Daniel Nguyen"
                 variant="bordered"
                 classNames={inputClass}
                 isRequired

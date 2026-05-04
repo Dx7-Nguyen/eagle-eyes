@@ -49,9 +49,9 @@ export function Help() {
           <li>
             Go to the <strong>Get Started</strong> page (linked from the landing page or navigate to <code className="bg-[#E8F5EE] px-1 rounded">/register</code>).
           </li>
-          <li>Enter your email address and create a password.</li>
+          <li>Enter your full name and email address.</li>
           <li>
-            Password requirements:
+            Create a password that meets these requirements:
             <ul className="pl-5 mt-1 space-y-0.5 list-disc">
               <li>8 to 128 characters long</li>
               <li>Letters (A–Z, a–z) and numbers (0–9) only — no special characters</li>
@@ -73,10 +73,28 @@ export function Help() {
         </ol>
       </Section>
 
+      <Section title="Your Profile">
+        <p className="text-[#4A6B57] mb-3">
+          Visit the <strong>Profile</strong> page from the nav bar to view your stats and manage your account details.
+        </p>
+        <ul className="pl-5 space-y-1.5 list-disc">
+          <li>
+            <strong>Full Name</strong> — click <strong>Edit name</strong> to update your name, then <strong>Save</strong> to confirm. Press <code className="bg-[#E8F5EE] px-1 rounded">Esc</code> or <strong>Cancel</strong> to discard changes.
+          </li>
+          <li>
+            <strong>Gender</strong> — select Male, Female, or Not set from the dropdown. The change saves automatically.
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Logging a Round">
         <ol className="pl-5 space-y-1.5">
           <li>Click <strong>New Round</strong> in the nav bar.</li>
-          <li>Enter the course name and date.</li>
+          <li>
+            Start typing the course name — Eagle Eyes searches a global course database and shows matches.
+            Pick one to lock in the official name, or just type your own if your course isn't listed.
+          </li>
+          <li>Pick the date.</li>
           <li>For each hole, set the par and enter shots one at a time.</li>
           <li>
             Each shot needs four values:

@@ -5,6 +5,7 @@ import type {
   RoundEditData,
   DraftSummary,
   TrendPoint,
+  CourseSearchResult,
 } from "../../shared/types/index.js";
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
@@ -55,4 +56,7 @@ export const api = {
     }),
   publishRound: (id: number) =>
     http<RoundDetail>(`/api/rounds/${id}/publish`, { method: "POST" }),
+
+  searchCourses: (q: string) =>
+    http<CourseSearchResult[]>(`/api/courses/search?q=${encodeURIComponent(q)}`),
 };

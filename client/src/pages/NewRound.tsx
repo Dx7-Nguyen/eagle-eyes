@@ -5,7 +5,7 @@ import {
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
 } from "@heroui/react";
 import { api } from "../api";
-import type { Lie, EndLie, Shot, HoleInput } from "../../../shared/types/index.js";
+import type { Lie, EndLie, Shot, HoleInput, CourseSearchResult } from "../../../shared/types/index.js";
 
 const START_LIES: Lie[] = ["TEE", "FAIRWAY", "ROUGH", "SAND", "RECOVERY", "GREEN"];
 const END_LIES: EndLie[] = [...START_LIES, "HOLE"];
@@ -65,6 +65,14 @@ export function NewRound() {
   const draftParam = searchParams.get("draft");
 
   const [course, setCourse] = useState("");
+  const [courseExternalId, setCourseExternalId] = useState<number | null>(null);
+  const [courseInputValue, setCourseInputValue] = useState("");
+  const [courseItems, setCourseItems] = useState<CourseSearchResult[]>([]);
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseDropdownOpen, setCourseDropdownOpen] = useState(false);
+  const selectedCourseNameRef = useRef<string | null>(null);
+  const courseRequestIdRef = useRef(0);
+
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [holes, setHoles] = useState<HoleInput[]>([emptyHole(1)]);
   const [draftId, setDraftId] = useState<number | null>(null);
@@ -82,11 +90,55 @@ export function NewRound() {
     api.getRoundEditData(id).then((data) => {
       if (data.status !== "DRAFT") return;
       setCourse(data.course);
+      setCourseInputValue(data.course);
+      setCourseExternalId(data.courseExternalId ?? null);
+      if (data.courseExternalId != null && data.course) {
+        setCourseItems([{ id: data.courseExternalId, name: data.course }]);
+        selectedCourseNameRef.current = data.course;
+      }
       setDate(data.date.slice(0, 10));
       setHoles(data.holes);
       setDraftId(id);
     }).catch(() => {});
   }, [draftParam]);
+
+  // Debounced course search against our proxy (300ms).
+  // Uses a request id ref to discard out-of-order responses, plus an AbortController
+  // to cancel in-flight fetches when the user keeps typing.
+  useEffect(() => {
+    const query = courseInputValue.trim();
+    if (query.length < 2) {
+      setCourseLoading(false);
+      return;
+    }
+    if (query === selectedCourseNameRef.current) {
+      // User just selected this; don't re-search.
+      return;
+    }
+
+    const controller = new AbortController();
+    const reqId = ++courseRequestIdRef.current;
+    setCourseLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await api.searchCourses(query);
+        if (controller.signal.aborted) return;
+        if (reqId !== courseRequestIdRef.current) return;
+        setCourseItems(results);
+        if (results.length > 0) setCourseDropdownOpen(true);
+      } catch {
+        // Network/abort errors → leave items as-is, swallow silently.
+      } finally {
+        if (reqId === courseRequestIdRef.current) setCourseLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [courseInputValue]);
 
   function updateHole(idx: number, patch: Partial<HoleInput>) {
     setHoles((p) => p.map((h, i) => (i === idx ? { ...h, ...patch } : h)));
@@ -148,7 +200,7 @@ export function NewRound() {
     setError(null);
     setSaving(true);
     try {
-      const input = { course, date: new Date(date).toISOString(), holes };
+      const input = { course, courseExternalId, date: new Date(date).toISOString(), holes };
       if (draftId) {
         await api.updateDraft(draftId, input);
       } else {
@@ -169,12 +221,13 @@ export function NewRound() {
     setSubmitting(true);
     setShowConfirm(false);
     try {
+      const input = { course, courseExternalId, date: new Date(date).toISOString(), holes };
       if (draftId) {
-        await api.updateDraft(draftId, { course, date: new Date(date).toISOString(), holes });
+        await api.updateDraft(draftId, input);
         await api.publishRound(draftId);
         navigate("/profile");
       } else {
-        await api.createRound({ course, date: new Date(date).toISOString(), holes });
+        await api.createRound(input);
         navigate("/profile");
       }
     } catch (e) {
@@ -206,27 +259,65 @@ export function NewRound() {
       )}
 
       {/* Course + date */}
-      <div className="flex gap-4">
-        <Input
-          label="Course"
-          placeholder="Pebble Beach"
-          value={course}
-          onValueChange={(v) => { setCourse(v); setSaveConfirmed(false); }}
-          classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
-          variant="bordered"
-          size="sm"
-          className="max-w-sm"
-        />
-        <Input
-          label="Date"
-          type="date"
+      <div className="flex gap-4 items-end">
+        <div className="relative max-w-sm w-full flex flex-col gap-1">
+          <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Course</span>
+          <Input
+            placeholder="Pebble Beach"
+            value={courseInputValue}
+            onValueChange={(v) => {
+              setCourseInputValue(v);
+              setCourse(v);
+              if (v !== selectedCourseNameRef.current) {
+                setCourseExternalId(null);
+                selectedCourseNameRef.current = null;
+              }
+              setSaveConfirmed(false);
+            }}
+            onFocus={() => setCourseDropdownOpen(true)}
+            onBlur={() => setTimeout(() => setCourseDropdownOpen(false), 150)}
+            classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
+            variant="bordered"
+            size="sm"
+            endContent={courseLoading ? (
+              <span className="text-[#4A6B57] text-xs animate-pulse">…</span>
+            ) : undefined}
+          />
+          {courseDropdownOpen && courseItems.length > 0 && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#C8DDD0] rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+              {courseItems.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#E8F5EE] transition-colors border-b border-[#F0F7F3] last:border-0"
+                  onMouseDown={() => {
+                    setCourseExternalId(c.id);
+                    setCourse(c.name);
+                    setCourseInputValue(c.name);
+                    selectedCourseNameRef.current = c.name;
+                    setCourseDropdownOpen(false);
+                    setSaveConfirmed(false);
+                  }}
+                >
+                  <div className="text-sm font-medium text-[#003D2B]">{c.name}</div>
+                  {c.location && <div className="text-xs text-[#4A6B57]">{c.location}</div>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Date</span>
+          <Input
+            type="date"
           value={date}
           onValueChange={(v) => { setDate(v); setSaveConfirmed(false); }}
           classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
           variant="bordered"
           size="sm"
-          className="max-w-[180px]"
+          className="w-[180px]"
         />
+        </div>
       </div>
 
       {/* Holes */}

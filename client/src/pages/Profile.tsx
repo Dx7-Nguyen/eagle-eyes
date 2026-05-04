@@ -71,7 +71,7 @@ function CategoryBar({ label, value, max }: { label: string; value: number; sub?
 }
 
 export function Profile() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, updateGender } = useAuth();
   const [rounds, setRounds] = useState<RoundSummary[] | null>(null);
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [trends, setTrends] = useState<TrendPoint[]>([]);
@@ -86,6 +86,7 @@ export function Profile() {
   const [nameSaving, setNameSaving] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
   const [nameError, setNameError] = useState("");
+  const [genderSaving, setGenderSaving] = useState(false);
 
   useEffect(() => {
     api.listRounds().then(setRounds).catch((e) => setError(String(e)));
@@ -144,6 +145,17 @@ export function Profile() {
     setEditName(user?.firstName ?? "");
     setNameError("");
     setNameEditing(true);
+  }
+
+  async function handleGenderChange(gender: string) {
+    setGenderSaving(true);
+    try {
+      await updateGender(gender);
+    } catch {
+      // silently ignore; UI reverts via user state
+    } finally {
+      setGenderSaving(false);
+    }
   }
 
   async function handleDeleteDraft() {
@@ -230,42 +242,57 @@ export function Profile() {
         </CardHeader>
         <Divider />
         <CardBody className="px-5 py-4 flex flex-col gap-3">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="flex items-start flex-wrap gap-y-3">
+            <div className="flex items-start gap-12 flex-wrap flex-1 min-w-0">
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Full Name</span>
+                {nameEditing ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Input
+                      size="sm"
+                      value={editName}
+                      onValueChange={setEditName}
+                      placeholder="Your full name"
+                      variant="bordered"
+                      className="w-44"
+                      classNames={{
+                        inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B] h-8",
+                      }}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setNameEditing(false); }}
+                      autoFocus
+                    />
+                    <Button size="sm" className="bg-[#003D2B] text-[#F5D130] font-bold h-8" onPress={saveName} isLoading={nameSaving}>
+                      Save
+                    </Button>
+                    <Button size="sm" variant="light" className="h-8" onPress={() => setNameEditing(false)} isDisabled={nameSaving}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-sm text-[#1A2E23]">
+                    {user?.firstName || <span className="text-[#4A6B57] italic">Not set</span>}
+                  </span>
+                )}
+                {nameError && <span className="text-xs text-danger-600">{nameError}</span>}
+                {nameSaved && <span className="text-xs text-success-600">Name updated!</span>}
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Gender</span>
+                <select
+                  value={user?.gender ?? ""}
+                  disabled={genderSaving}
+                  onChange={(e) => handleGenderChange(e.target.value)}
+                  className="text-sm text-[#1A2E23] border border-[#C8DDD0] rounded-lg px-2 py-1 bg-white hover:border-[#003D2B] focus:outline-none focus:border-[#003D2B] disabled:opacity-50 cursor-pointer"
+                >
+                  <option value="">Not set</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-col gap-0.5 items-end">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Email</span>
               <span className="text-sm text-[#1A2E23]">{user?.email}</span>
-            </div>
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">First Name</span>
-              {nameEditing ? (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Input
-                    size="sm"
-                    value={editName}
-                    onValueChange={setEditName}
-                    placeholder="Your first name"
-                    variant="bordered"
-                    className="w-44"
-                    classNames={{
-                      inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B] h-8",
-                    }}
-                    onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setNameEditing(false); }}
-                    autoFocus
-                  />
-                  <Button size="sm" className="bg-[#003D2B] text-[#F5D130] font-bold h-8" onPress={saveName} isLoading={nameSaving}>
-                    Save
-                  </Button>
-                  <Button size="sm" variant="light" className="h-8" onPress={() => setNameEditing(false)} isDisabled={nameSaving}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <span className="text-sm text-[#1A2E23]">
-                  {user?.firstName || <span className="text-[#4A6B57] italic">Not set</span>}
-                </span>
-              )}
-              {nameError && <span className="text-xs text-danger-600">{nameError}</span>}
-              {nameSaved && <span className="text-xs text-success-600">Name updated!</span>}
             </div>
           </div>
         </CardBody>

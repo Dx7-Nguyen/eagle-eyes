@@ -14,8 +14,8 @@ const COOKIE_OPTS = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-function userResponse(user: { id: number; email: string; firstName: string }) {
-  return { id: user.id, email: user.email, firstName: user.firstName };
+function userResponse(user: { id: number; email: string; firstName: string; gender: string }) {
+  return { id: user.id, email: user.email, firstName: user.firstName, gender: user.gender };
 }
 
 authRouter.post("/register", async (req, res) => {
@@ -27,7 +27,7 @@ authRouter.post("/register", async (req, res) => {
 
   const name = firstName?.trim() ?? "";
   if (!name) {
-    res.status(400).json({ error: "First name is required" });
+    res.status(400).json({ error: "Full name is required" });
     return;
   }
   if (!email || !EMAIL_RE.test(email)) {
@@ -92,16 +92,26 @@ authRouter.get("/me", requireAuth, async (req, res) => {
 });
 
 authRouter.patch("/profile", requireAuth, async (req, res) => {
-  const { firstName } = req.body as { firstName?: string };
-  const name = firstName?.trim() ?? "";
-  if (!name) {
-    res.status(400).json({ error: "First name cannot be empty" });
-    return;
+  const { firstName, gender } = req.body as { firstName?: string; gender?: string };
+
+  const data: { firstName?: string; gender?: string } = {};
+
+  if (firstName !== undefined) {
+    const name = firstName.trim();
+    if (!name) { res.status(400).json({ error: "Full name cannot be empty" }); return; }
+    data.firstName = name;
+  }
+
+  if (gender !== undefined) {
+    if (!["male", "female", ""].includes(gender)) {
+      res.status(400).json({ error: "Invalid gender value" }); return;
+    }
+    data.gender = gender;
   }
 
   const user = await prisma.user.update({
     where: { id: req.user!.userId },
-    data: { firstName: name },
+    data,
   });
   res.json(userResponse(user));
 });
