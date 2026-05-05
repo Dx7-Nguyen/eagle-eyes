@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { AuthUser } from "../../../shared/types/index.js";
 
+const BASE_URL = import.meta.env.PROD ? "https://eagle-eyes.onrender.com" : "";
+
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
@@ -18,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch(`${BASE_URL}/api/auth/me`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((u: AuthUser | null) => setUser(u))
       .catch(() => setUser(null))
@@ -26,8 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string, rememberMe = false) {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, rememberMe }),
     });
@@ -39,8 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(email: string, password: string, firstName: string) {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, firstName }),
     });
@@ -52,13 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST", credentials: "include" });
     setUser(null);
   }
 
   async function updateProfile(firstName: string) {
-    const res = await fetch("/api/auth/profile", {
+    const res = await fetch(`${BASE_URL}/api/auth/profile`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ firstName }),
     });
@@ -70,8 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function updateGender(gender: string) {
-    const res = await fetch("/api/auth/profile", {
+    const res = await fetch(`${BASE_URL}/api/auth/profile`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gender }),
     });

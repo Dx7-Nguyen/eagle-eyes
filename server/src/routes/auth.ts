@@ -8,14 +8,18 @@ export const authRouter = Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_RE = /^[a-zA-Z0-9]{8,128}$/;
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const SESSION_COOKIE_OPTS = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: isProduction,
 };
 
 const REMEMBER_COOKIE_OPTS = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: isProduction,
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
@@ -86,7 +90,11 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/logout", (_req, res) => {
-  res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
   res.json({ ok: true });
 });
 
