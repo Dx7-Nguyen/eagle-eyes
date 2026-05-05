@@ -34,8 +34,6 @@ export function Landing() {
   const az3Ref = useRef<HTMLImageElement>(null);
   const [scrolled, setScrolled] = useState(false);
 
-  if (!loading && user) return <Navigate to="/profile" replace />;
-
   useEffect(() => {
     document.body.style.overflowX = "hidden";
     return () => { document.body.style.overflowX = ""; };
@@ -64,6 +62,8 @@ export function Landing() {
     document.querySelectorAll(`.${styles.reveal}`).forEach(el => io.observe(el));
     return () => io.disconnect();
   }, []);
+
+  if (!loading && user) return <Navigate to="/profile" replace />;
 
   return (
     <div className={styles.wrapper}>
