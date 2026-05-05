@@ -25,6 +25,11 @@ app.use("/api/trends", trendsRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/handicap", handicapRouter);
 
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
