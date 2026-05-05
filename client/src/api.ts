@@ -9,8 +9,10 @@ import type {
   HandicapData,
 } from "../../shared/types/index.js";
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     ...init,
     credentials: "include",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },

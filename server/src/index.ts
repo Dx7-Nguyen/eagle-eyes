@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { roundsRouter } from "./routes/rounds.js";
 import { trendsRouter } from "./routes/trends.js";
@@ -7,6 +8,10 @@ import { coursesRouter } from "./routes/courses.js";
 import { handicapRouter } from "./routes/handicap.js";
 
 const app = express();
+
+const allowedOrigin = process.env.CLIENT_URL ?? "http://localhost:5173";
+app.use(cors({ origin: allowedOrigin, credentials: true }));
+
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
