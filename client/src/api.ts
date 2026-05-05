@@ -9,7 +9,7 @@ import type {
   HandicapData,
 } from "../../shared/types/index.js";
 
-const BASE_URL = import.meta.env.PROD ? "https://eagle-eyes.onrender.com" : "";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${url}`, {

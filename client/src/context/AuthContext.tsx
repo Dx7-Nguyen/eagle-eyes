@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { AuthUser } from "../../../shared/types/index.js";
 
-const BASE_URL = import.meta.env.PROD ? "https://eagle-eyes.onrender.com" : "";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 interface AuthContextValue {
   user: AuthUser | null;
