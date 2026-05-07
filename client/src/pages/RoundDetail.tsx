@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Card, CardBody, CardHeader,
-  Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
   Chip, Button, Divider, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
   useDisclosure,
 } from "@heroui/react";
@@ -83,14 +82,14 @@ export function RoundDetail() {
 
       {/* Summary card */}
       <Card className="border border-[#C8DDD0]" shadow="none">
-        <CardHeader className="bg-[#003D2B] px-6 py-4 rounded-t-xl">
-          <div className="flex justify-between items-start w-full">
-            <div>
-              <h2 className="text-[#F5D130] font-bold text-xl m-0">{round.course}</h2>
+        <CardHeader className="bg-[#003D2B] px-4 sm:px-6 py-4 rounded-t-xl">
+          <div className="flex justify-between items-start w-full gap-3">
+            <div className="min-w-0">
+              <h2 className="text-[#F5D130] font-bold text-lg sm:text-xl m-0 truncate">{round.course}</h2>
               <p className="text-white/60 text-sm m-0">{fmtDate(round.date)}</p>
             </div>
-            <div className="text-right">
-              <div className="text-white font-bold text-2xl font-mono tabular-nums">
+            <div className="text-right shrink-0">
+              <div className="text-white font-bold text-xl sm:text-2xl font-mono tabular-nums">
                 {round.totalStrokes}{" "}
                 <span className={scoreDiff <= 0 ? "text-green-400" : "text-red-400"}>
                   ({scoreDiff >= 0 ? "+" : ""}{scoreDiff})
@@ -100,8 +99,9 @@ export function RoundDetail() {
             </div>
           </div>
         </CardHeader>
-        <CardBody className="px-6 py-5">
-          <div className="grid grid-cols-4 gap-4 text-center">
+        <CardBody className="px-4 sm:px-6 py-5">
+          {/* 2-col on mobile, 4-col on sm+ */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             {(["TEE", "APPROACH", "SHORT_GAME", "PUTTING"] as const).map((cat) => (
               <div key={cat} className="flex flex-col gap-1">
                 <span className="text-[#4A6B57] text-xs uppercase tracking-wide">
@@ -125,52 +125,82 @@ export function RoundDetail() {
       <h3 className="text-[#003D2B] font-bold text-lg m-0">Holes</h3>
       {round.holes.map((h) => (
         <Card key={h.number} className="border border-[#C8DDD0] border-l-4 border-l-[#00563F]" shadow="none">
-          <CardHeader className="px-5 py-3 flex justify-between items-center">
+          <CardHeader className="px-4 sm:px-5 py-3 flex justify-between items-center">
             <span className="font-semibold text-[#003D2B]">Hole {h.number} · Par {h.par}</span>
             <span className="text-sm text-[#4A6B57]">{h.strokes} strokes</span>
           </CardHeader>
           <Divider />
           <CardBody className="p-0">
-            <Table
-              aria-label={`Hole ${h.number} shots`}
-              classNames={{
-                th: "bg-[#003D2B] text-[#F5D130] font-semibold text-xs uppercase tracking-wide",
-                td: "text-xs py-2",
-              }}
-              shadow="none"
-              removeWrapper
-            >
-              <TableHeader>
-                <TableColumn>#</TableColumn>
-                <TableColumn>From</TableColumn>
-                <TableColumn>Dist</TableColumn>
-                <TableColumn>To</TableColumn>
-                <TableColumn>Dist</TableColumn>
-                <TableColumn>Category</TableColumn>
-                <TableColumn>SG</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {h.shots.map((s) => (
-                  <TableRow key={s.shotNumber}>
-                    <TableCell>{s.shotNumber}</TableCell>
-                    <TableCell>{s.startLie}</TableCell>
-                    <TableCell><span className="font-mono tabular-nums">{s.startDistance}{s.startLie === "GREEN" ? "ft" : "y"}</span></TableCell>
-                    <TableCell>{s.endLie}</TableCell>
-                    <TableCell>
-                      <span className="font-mono tabular-nums">
-                        {s.endLie === "HOLE" ? "—" : `${s.endDistance}${s.endLie === "GREEN" ? "ft" : "y"}`}
-                      </span>
-                    </TableCell>
-                    <TableCell>
+            {/* Mobile: card per shot */}
+            <div className="flex flex-col gap-2 p-3 sm:hidden">
+              {h.shots.map((s) => (
+                <div key={s.shotNumber} className="border border-[#E8F5EE] rounded-lg p-3 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#4A6B57]">Shot {s.shotNumber}</span>
+                    <div className="flex items-center gap-2">
                       <Chip size="sm" variant="dot" color="primary" classNames={{ content: "text-xs" }}>
                         {s.category.replace("_", " ")}
                       </Chip>
-                    </TableCell>
-                    <TableCell><SGChip value={s.strokesGained} /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <SGChip value={s.strokesGained} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#4A6B57] font-medium">From</span>
+                      <span className="font-medium text-[#1A2E23]">{s.startLie}</span>
+                      <span className="font-mono text-[#4A6B57]">
+                        {s.startDistance}{s.startLie === "GREEN" ? "ft" : "y"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#4A6B57] font-medium">To</span>
+                      <span className="font-medium text-[#1A2E23]">{s.endLie}</span>
+                      <span className="font-mono text-[#4A6B57]">
+                        {s.endLie === "HOLE" ? "—" : `${s.endDistance}${s.endLie === "GREEN" ? "ft" : "y"}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-[#003D2B] text-[#F5D130]">
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">#</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">From</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">To</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Category</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">SG</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {h.shots.map((s) => (
+                    <tr key={s.shotNumber} className="border-b border-[#E8F5EE] last:border-0 hover:bg-[#E8F5EE]/50">
+                      <td className="px-4 py-2 font-mono tabular-nums font-medium text-[#4A6B57]">{s.shotNumber}</td>
+                      <td className="px-4 py-2">{s.startLie}</td>
+                      <td className="px-4 py-2"><span className="font-mono tabular-nums">{s.startDistance}{s.startLie === "GREEN" ? "ft" : "y"}</span></td>
+                      <td className="px-4 py-2">{s.endLie}</td>
+                      <td className="px-4 py-2">
+                        <span className="font-mono tabular-nums">
+                          {s.endLie === "HOLE" ? "—" : `${s.endDistance}${s.endLie === "GREEN" ? "ft" : "y"}`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Chip size="sm" variant="dot" color="primary" classNames={{ content: "text-xs" }}>
+                          {s.category.replace("_", " ")}
+                        </Chip>
+                      </td>
+                      <td className="px-4 py-2"><SGChip value={s.strokesGained} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardBody>
         </Card>
       ))}

@@ -43,9 +43,9 @@ function StatCard({
       shadow="none"
       className={`border border-[#C8DDD0] h-full transition-colors ${to ? "hover:border-[#003D2B] hover:bg-[#F5FBF7] cursor-pointer" : ""}`}
     >
-      <CardBody className="px-5 py-4 flex flex-col gap-1">
+      <CardBody className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57] m-0">{label}</p>
-        <div className="text-2xl font-bold text-[#003D2B] leading-tight">{value}</div>
+        <div className="text-xl sm:text-2xl font-bold text-[#003D2B] leading-tight">{value}</div>
         {sub && <p className="text-xs text-[#4A6B57] m-0">{sub}</p>}
       </CardBody>
     </Card>
@@ -53,7 +53,7 @@ function StatCard({
   return to ? <Link to={to} className="no-underline block">{inner}</Link> : inner;
 }
 
-function CategoryBar({ label, value, max }: { label: string; value: number; sub?: string; max: number }) {
+function CategoryBar({ label, value, max }: { label: string; value: number; max: number }) {
   const pct = max === 0 ? 0 : Math.min(Math.abs(value) / max, 1) * 100;
   const positive = value >= 0;
   return (
@@ -81,7 +81,6 @@ export function Profile() {
   const [draftTarget, setDraftTarget] = useState<DraftSummary | null>(null);
   const { isOpen: isDraftModalOpen, onOpen: onDraftModalOpen, onClose: onDraftModalClose } = useDisclosure();
 
-  // Editable name state
   const [editName, setEditName] = useState("");
   const [nameEditing, setNameEditing] = useState(false);
   const [nameSaving, setNameSaving] = useState(false);
@@ -112,10 +111,7 @@ export function Profile() {
     PUTTING: avg(rounds.map((r) => r.sgByCategory.PUTTING)),
   };
 
-  const catMax = Math.max(
-    ...Object.values(avgByCategory).map(Math.abs),
-    0.01,
-  );
+  const catMax = Math.max(...Object.values(avgByCategory).map(Math.abs), 0.01);
 
   const chartData = trends.slice(-10).map((p) => ({
     label: fmtDate(p.date),
@@ -176,9 +172,9 @@ export function Profile() {
     <div className="flex flex-col gap-6">
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-start sm:items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-[#003D2B] font-black text-2xl m-0">
+          <h2 className="text-[#003D2B] font-black text-xl sm:text-2xl m-0">
             Welcome back, <span className="text-[#00563F]">{displayName}</span>
           </h2>
           <p className="text-[#4A6B57] text-sm m-0 mt-0.5">
@@ -249,58 +245,62 @@ export function Profile() {
           )}
         </CardHeader>
         <Divider />
-        <CardBody className="px-5 py-4 flex flex-col gap-3">
-          <div className="flex items-start flex-wrap gap-y-3">
-            <div className="flex items-start gap-12 flex-wrap flex-1 min-w-0">
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Full Name</span>
-                {nameEditing ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Input
-                      size="sm"
-                      value={editName}
-                      onValueChange={setEditName}
-                      placeholder="Your full name"
-                      variant="bordered"
-                      className="w-44"
-                      classNames={{
-                        inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B] h-8",
-                      }}
-                      onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setNameEditing(false); }}
-                      autoFocus
-                    />
-                    <Button size="sm" className="bg-[#003D2B] text-[#F5D130] font-bold h-8" onPress={saveName} isLoading={nameSaving}>
-                      Save
-                    </Button>
-                    <Button size="sm" variant="light" className="h-8" onPress={() => setNameEditing(false)} isDisabled={nameSaving}>
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-[#1A2E23]">
-                    {user?.firstName || <span className="text-[#4A6B57] italic">Not set</span>}
-                  </span>
-                )}
-                {nameError && <span className="text-xs text-danger-600">{nameError}</span>}
-                {nameSaved && <span className="text-xs text-success-600">Name updated!</span>}
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Gender</span>
-                <select
-                  value={user?.gender ?? ""}
-                  disabled={genderSaving}
-                  onChange={(e) => handleGenderChange(e.target.value)}
-                  className="text-sm text-[#1A2E23] border border-[#C8DDD0] rounded-lg px-2 py-1 bg-white hover:border-[#003D2B] focus:outline-none focus:border-[#003D2B] disabled:opacity-50 cursor-pointer"
-                >
-                  <option value="">Not set</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
+        <CardBody className="px-5 py-4 flex flex-col gap-4">
+          {/* Fields: flex-wrap so they stack on small screens */}
+          <div className="flex flex-wrap gap-x-10 gap-y-4">
+            {/* Full Name */}
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Full Name</span>
+              {nameEditing ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Input
+                    size="sm"
+                    value={editName}
+                    onValueChange={setEditName}
+                    placeholder="Your full name"
+                    variant="bordered"
+                    className="w-44"
+                    classNames={{
+                      inputWrapper: "border-[#C8DDD0] hover:border-[#003D2B] focus-within:!border-[#003D2B] h-8",
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setNameEditing(false); }}
+                    autoFocus
+                  />
+                  <Button size="sm" className="bg-[#003D2B] text-[#F5D130] font-bold h-8" onPress={saveName} isLoading={nameSaving}>
+                    Save
+                  </Button>
+                  <Button size="sm" variant="light" className="h-8" onPress={() => setNameEditing(false)} isDisabled={nameSaving}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <span className="text-sm text-[#1A2E23]">
+                  {user?.firstName || <span className="text-[#4A6B57] italic">Not set</span>}
+                </span>
+              )}
+              {nameError && <span className="text-xs text-danger-600">{nameError}</span>}
+              {nameSaved && <span className="text-xs text-success-600">Name updated!</span>}
             </div>
-            <div className="flex flex-col gap-0.5 items-end">
+
+            {/* Gender */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Gender</span>
+              <select
+                value={user?.gender ?? ""}
+                disabled={genderSaving}
+                onChange={(e) => handleGenderChange(e.target.value)}
+                className="text-sm text-[#1A2E23] border border-[#C8DDD0] rounded-lg px-2 py-1 bg-white hover:border-[#003D2B] focus:outline-none focus:border-[#003D2B] disabled:opacity-50 cursor-pointer"
+              >
+                <option value="">Not set</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            {/* Email */}
+            <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Email</span>
-              <span className="text-sm text-[#1A2E23]">{user?.email}</span>
+              <span className="text-sm text-[#1A2E23] break-all">{user?.email}</span>
             </div>
           </div>
         </CardBody>
@@ -341,12 +341,12 @@ export function Profile() {
                   <p className="text-white/50 text-xs m-0">Click to view full trends →</p>
                 </div>
               </CardHeader>
-              <CardBody className="p-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: -16 }}>
+              <CardBody className="p-3 sm:p-4">
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E8F5EE" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} />
+                    <XAxis dataKey="label" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
                     <Tooltip />
                     <ReferenceLine y={0} stroke="#C8DDD0" strokeWidth={1.5} />
                     <Line
@@ -406,13 +406,13 @@ export function Profile() {
               key={d.id}
               className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#F5D130]/50 bg-[#FFFDE8]"
             >
-              <div className="flex flex-col gap-0.5">
-                <span className="font-semibold text-[#003D2B] text-sm">{d.course || "Untitled round"}</span>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="font-semibold text-[#003D2B] text-sm truncate">{d.course || "Untitled round"}</span>
                 <span className="text-xs text-[#4A6B57]">
                   {fmtDate(d.date)} · {d.holeCount} {d.holeCount === 1 ? "hole" : "holes"} logged
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0 ml-2">
                 <Button
                   size="sm"
                   variant="light"
@@ -441,48 +441,86 @@ export function Profile() {
           </CardHeader>
           <Divider />
           <CardBody className="p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#003D2B]">
-                  {["Date", "Course", "Score", "SG: Tee", "SG: App", "SG: Short", "SG: Putt", "SG Total"].map((h) => (
-                    <th key={h} className="px-4 py-2 text-left text-[#F5D130] font-semibold text-xs uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((r, i) => (
-                  <tr key={r.id} className={`border-b border-[#E8F5EE] hover:bg-[#F5FBF7] transition-colors ${i % 2 === 1 ? "bg-[#FAFFFE]" : ""}`}>
-                    <td className="px-4 py-2.5 text-[#4A6B57] whitespace-nowrap">{fmtDate(r.date)}</td>
-                    <td className="px-4 py-2.5">
-                      <Link to={`/rounds/${r.id}`} className="text-[#00563F] font-medium hover:underline">
-                        {r.course}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 font-mono tabular-nums">
-                      {r.totalStrokes}
-                      <span className={`ml-1 text-xs ${r.totalStrokes - r.totalPar <= 0 ? "text-success-600" : "text-danger-600"}`}>
-                        ({r.totalStrokes - r.totalPar >= 0 ? "+" : ""}{r.totalStrokes - r.totalPar})
+            {/* Mobile card list */}
+            <div className="flex flex-col divide-y divide-[#E8F5EE] sm:hidden">
+              {recent.map((r) => {
+                const diff = r.totalStrokes - r.totalPar;
+                return (
+                  <div key={r.id} className="px-4 py-3 flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link to={`/rounds/${r.id}`} className="text-[#00563F] font-medium text-sm hover:underline truncate block">
+                          {r.course}
+                        </Link>
+                        <span className="text-xs text-[#4A6B57]">{fmtDate(r.date)}</span>
+                      </div>
+                      <span className="font-mono text-sm font-semibold text-[#1A2E23] shrink-0">
+                        {r.totalStrokes}{" "}
+                        <span className={diff <= 0 ? "text-success-600" : "text-danger-600"}>
+                          ({diff >= 0 ? "+" : ""}{diff})
+                        </span>
                       </span>
-                    </td>
-                    <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.TEE} /></td>
-                    <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.APPROACH} /></td>
-                    <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.SHORT_GAME} /></td>
-                    <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.PUTTING} /></td>
-                    <td className="px-4 py-2.5">
-                      <Chip
-                        size="sm" variant="flat"
-                        color={r.sgTotal >= 0 ? "success" : "danger"}
-                        classNames={{ content: "font-mono font-bold text-xs tabular-nums" }}
-                      >
-                        {fmtSG(r.sgTotal)}
-                      </Chip>
-                    </td>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1 text-center">
+                      {(["TEE", "APPROACH", "SHORT_GAME", "PUTTING"] as const).map((cat) => (
+                        <div key={cat} className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] text-[#4A6B57] uppercase">
+                            {cat === "SHORT_GAME" ? "Short" : cat === "APPROACH" ? "App" : cat === "PUTTING" ? "Putt" : "Tee"}
+                          </span>
+                          <SGValue value={r.sgByCategory[cat]} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden sm:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#003D2B]">
+                    {["Date", "Course", "Score", "SG: Tee", "SG: App", "SG: Short", "SG: Putt", "SG Total"].map((h) => (
+                      <th key={h} className="px-4 py-2 text-left text-[#F5D130] font-semibold text-xs uppercase tracking-wide whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recent.map((r, i) => (
+                    <tr key={r.id} className={`border-b border-[#E8F5EE] hover:bg-[#F5FBF7] transition-colors ${i % 2 === 1 ? "bg-[#FAFFFE]" : ""}`}>
+                      <td className="px-4 py-2.5 text-[#4A6B57] whitespace-nowrap">{fmtDate(r.date)}</td>
+                      <td className="px-4 py-2.5">
+                        <Link to={`/rounds/${r.id}`} className="text-[#00563F] font-medium hover:underline">
+                          {r.course}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2.5 font-mono tabular-nums">
+                        {r.totalStrokes}
+                        <span className={`ml-1 text-xs ${r.totalStrokes - r.totalPar <= 0 ? "text-success-600" : "text-danger-600"}`}>
+                          ({r.totalStrokes - r.totalPar >= 0 ? "+" : ""}{r.totalStrokes - r.totalPar})
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.TEE} /></td>
+                      <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.APPROACH} /></td>
+                      <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.SHORT_GAME} /></td>
+                      <td className="px-4 py-2.5"><SGValue value={r.sgByCategory.PUTTING} /></td>
+                      <td className="px-4 py-2.5">
+                        <Chip
+                          size="sm" variant="flat"
+                          color={r.sgTotal >= 0 ? "success" : "danger"}
+                          classNames={{ content: "font-mono font-bold text-xs tabular-nums" }}
+                        >
+                          {fmtSG(r.sgTotal)}
+                        </Chip>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardBody>
         </Card>
       )}

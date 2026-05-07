@@ -59,3 +59,22 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 0 2px rgba(0,86,63,0.2);
 }
 .shot-input:disabled { background: #f0f0f0; color: #999; }
+
+/* Full-width variant used in mobile card shot entry */
+.shot-input-full {
+  width: 100%;
+  font-size: 13px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #C8DDD0;
+  background: #fff;
+  color: #1A2E23;
+}
+.shot-input-full:focus {
+  outline: none;
+  border-color: #00563F;
+  box-shadow: 0 0 0 2px rgba(0,86,63,0.2);
+}
+.shot-input-full:disabled { background: #f0f0f0; color: #999; }

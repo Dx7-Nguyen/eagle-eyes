@@ -30,14 +30,14 @@ function DistanceInput({
   value,
   disabled,
   onChange,
+  fullWidth,
 }: {
   value: number;
   disabled?: boolean;
   onChange: (v: number) => void;
+  fullWidth?: boolean;
 }) {
   const [text, setText] = useState(String(value));
-  // Sync when parent value changes (e.g. holeOut sets endDistance→0, or draft load)
-  // Use functional updater so `text` isn't a stale dep
   useEffect(() => {
     setText((prev) => Number(prev) !== value ? String(value) : prev);
   }, [value]);
@@ -52,7 +52,7 @@ function DistanceInput({
       step="0.1"
       disabled={disabled}
       value={text}
-      className="shot-input"
+      className={fullWidth ? "shot-input-full" : "shot-input"}
       onChange={(e) => setText(e.target.value)}
       onBlur={() => {
         const num = text === "" || isNaN(Number(text)) ? 0 : Number(text);
@@ -106,7 +106,6 @@ export function NewRound() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load draft if ?draft=ID is present in URL
   useEffect(() => {
     if (!draftParam) return;
     const id = Number(draftParam);
@@ -139,19 +138,13 @@ export function NewRound() {
     }).catch(() => {});
   }, [draftParam]);
 
-  // Debounced course search against our proxy (300ms).
-  // Uses a request id ref to discard out-of-order responses, plus an AbortController
-  // to cancel in-flight fetches when the user keeps typing.
   useEffect(() => {
     const query = courseInputValue.trim();
     if (query.length < 2) {
       setCourseLoading(false);
       return;
     }
-    if (query === selectedCourseNameRef.current) {
-      // User just selected this; don't re-search.
-      return;
-    }
+    if (query === selectedCourseNameRef.current) return;
 
     const controller = new AbortController();
     const cacheKey = query.toLowerCase();
@@ -174,7 +167,7 @@ export function NewRound() {
         setCourseItems(results);
         if (results.length > 0) setCourseDropdownOpen(true);
       } catch {
-        // Network/abort errors → leave items as-is, swallow silently.
+        // swallow silently
       } finally {
         if (reqId === courseRequestIdRef.current) setCourseLoading(false);
       }
@@ -299,11 +292,12 @@ export function NewRound() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      {/* ── Header + action buttons ─────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-[#003D2B] font-bold text-2xl m-0">
           {draftId ? "Continue Round" : "New Round"}
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {saveConfirmed && !saving && (
             <span className="text-success-700 text-sm font-medium">Progress saved</span>
           )}
@@ -341,9 +335,10 @@ export function NewRound() {
         </div>
       )}
 
-      {/* Course + date */}
-      <div className="flex gap-4 items-end">
-        <div className="relative max-w-sm w-full flex flex-col gap-1">
+      {/* ── Course + date + round type ──────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
+        {/* Course search */}
+        <div className="relative flex-1 sm:max-w-sm flex flex-col gap-1">
           <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Course</span>
           <Input
             placeholder="Pebble Beach"
@@ -396,40 +391,44 @@ export function NewRound() {
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Date</span>
-          <Input
-            type="date"
-            value={date}
-            onValueChange={(v) => { setDate(v); setSaveConfirmed(false); }}
-            classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
-            variant="bordered"
-            size="sm"
-            className="w-[180px]"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Holes</span>
-          <div className="flex border border-[#C8DDD0] rounded-lg overflow-hidden h-8">
-            {(["F9", "B9", "18"] as RoundType[]).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => {
-                  setRoundType(type);
-                  const tee = availableTees[selectedTeeIndex];
-                  setHoles(tee ? buildHolesFromTee(tee, type) : [emptyHole(roundTypeStartHole(type))]);
-                  setSaveConfirmed(false);
-                }}
-                className={`px-3 text-xs font-semibold border-r border-[#C8DDD0] last:border-r-0 transition-colors ${
-                  roundType === type
-                    ? "bg-[#003D2B] text-[#F5D130]"
-                    : "bg-white text-[#4A6B57] hover:bg-[#E8F5EE]"
-                }`}
-              >
-                {type === "F9" ? "Front 9" : type === "B9" ? "Back 9" : "18 Holes"}
-              </button>
-            ))}
+
+        {/* Date + round type: side by side on mobile, in-flow on desktop */}
+        <div className="flex gap-3 sm:gap-4 sm:items-end">
+          <div className="flex flex-col gap-1 flex-1 sm:flex-none">
+            <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Date</span>
+            <Input
+              type="date"
+              value={date}
+              onValueChange={(v) => { setDate(v); setSaveConfirmed(false); }}
+              classNames={{ inputWrapper: "border border-[#C8DDD0]" }}
+              variant="bordered"
+              size="sm"
+              className="sm:w-[180px]"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-[#4A6B57] uppercase tracking-wide">Holes</span>
+            <div className="flex border border-[#C8DDD0] rounded-lg overflow-hidden h-8">
+              {(["F9", "B9", "18"] as RoundType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setRoundType(type);
+                    const tee = availableTees[selectedTeeIndex];
+                    setHoles(tee ? buildHolesFromTee(tee, type) : [emptyHole(roundTypeStartHole(type))]);
+                    setSaveConfirmed(false);
+                  }}
+                  className={`px-2 sm:px-3 text-xs font-semibold border-r border-[#C8DDD0] last:border-r-0 transition-colors ${
+                    roundType === type
+                      ? "bg-[#003D2B] text-[#F5D130]"
+                      : "bg-white text-[#4A6B57] hover:bg-[#E8F5EE]"
+                  }`}
+                >
+                  {type === "F9" ? "F9" : type === "B9" ? "B9" : "18"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -438,8 +437,8 @@ export function NewRound() {
       {availableTees.length > 0 && (() => {
         const tee = availableTees[selectedTeeIndex] ?? availableTees[0];
         return (
-          <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-[#F0F7F4] border border-[#C8DDD0] rounded-xl">
-            <div className="flex items-center gap-2 mr-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-4 py-3 bg-[#F0F7F4] border border-[#C8DDD0] rounded-xl">
+            <div className="flex items-center gap-2 mr-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Tee</span>
               {availableTees.length === 1 ? (
                 <span className="text-sm font-semibold text-[#003D2B]">{tee.tee_name}</span>
@@ -460,23 +459,23 @@ export function NewRound() {
                 </select>
               )}
             </div>
-            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="h-4 w-px bg-[#C8DDD0] hidden sm:block" />
             <div className="flex items-baseline gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Par</span>
               <span className="text-sm font-bold text-[#003D2B]">{tee.par_total}</span>
             </div>
-            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="h-4 w-px bg-[#C8DDD0] hidden sm:block" />
             <div className="flex items-baseline gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Yards</span>
               <span className="text-sm font-bold text-[#003D2B]">{tee.total_yards.toLocaleString()}</span>
             </div>
-            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="h-4 w-px bg-[#C8DDD0] hidden sm:block" />
             <div className="flex items-baseline gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Rating</span>
               <span className="text-sm font-bold text-[#003D2B]">{tee.course_rating}</span>
               <span className="text-xs text-[#4A6B57]">/ {tee.slope_rating}</span>
             </div>
-            <div className="h-4 w-px bg-[#C8DDD0]" />
+            <div className="h-4 w-px bg-[#C8DDD0] hidden sm:block" />
             <div className="flex items-baseline gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">Holes</span>
               <span className="text-sm font-bold text-[#003D2B]">{tee.number_of_holes}</span>
@@ -485,11 +484,11 @@ export function NewRound() {
         );
       })()}
 
-      {/* Holes */}
+      {/* ── Holes ───────────────────────────────────────────────────────── */}
       {holes.map((h, hi) => (
         <Card key={hi} className="border border-[#C8DDD0] border-l-4 border-l-[#00563F]" shadow="none">
-          <CardHeader className="px-5 py-3 flex justify-between items-center">
-            <div className="flex items-center gap-3">
+          <CardHeader className="px-3 sm:px-5 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span className="font-semibold text-[#003D2B]">Hole {h.number}</span>
               {h.shots.length > 0 && h.shots[h.shots.length - 1].endLie === "HOLE" && (
                 <span className="text-xs font-medium text-success-700 bg-success-100 px-2 py-0.5 rounded-full">
@@ -497,8 +496,8 @@ export function NewRound() {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-[#4A6B57] font-medium uppercase tracking-wide flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <label className="text-xs text-[#4A6B57] font-medium uppercase tracking-wide flex items-center gap-1.5">
                 Par
                 <select
                   value={h.par}
@@ -520,96 +519,178 @@ export function NewRound() {
           </CardHeader>
           <Divider />
           <CardBody className="p-0">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-[#003D2B] text-[#F5D130]">
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">#</th>
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">From</th>
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">To</th>
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
-                  <th className="px-4 py-2 text-left font-semibold tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {h.shots.map((s, si) => (
-                  <tr key={si} className="border-b border-[#E8F5EE] last:border-0 hover:bg-[#E8F5EE]/50">
-                    <td className="px-4 py-2 font-mono tabular-nums font-medium text-[#4A6B57]">{s.shotNumber}</td>
-                    <td className="px-4 py-2">
+            {/* ── Mobile: card per shot ───────────────────────────────── */}
+            <div className="flex flex-col gap-2 p-3 sm:hidden">
+              {h.shots.map((s, si) => (
+                <div key={si} className="border border-[#E8F5EE] rounded-lg p-3 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#4A6B57]">Shot {s.shotNumber}</span>
+                    {h.shots.length > 1 && (
+                      <Button
+                        size="sm" variant="light" color="danger"
+                        isIconOnly onPress={() => removeShot(hi, si)}
+                        className="min-w-6 h-6 text-base"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* From */}
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">From</span>
                       <select
                         value={s.startLie}
                         onChange={(e) => updateShot(hi, si, { startLie: e.target.value as Lie })}
-                        className="shot-select"
+                        className="shot-select w-full"
                       >
                         {START_LIES.map((l) => <option key={l} value={l}>{l}</option>)}
                       </select>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-1">
                         <DistanceInput
                           value={s.startDistance}
                           onChange={(v) => updateShot(hi, si, { startDistance: v })}
+                          fullWidth
                         />
-                        <span className="text-[#4A6B57]">{distUnit(s.startLie)}</span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
+                        <span className="text-[#4A6B57] text-xs shrink-0">{distUnit(s.startLie)}</span>
+                      </div>
+                    </div>
+                    {/* To */}
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A6B57]">To</span>
                       <select
                         value={s.endLie}
                         onChange={(e) => updateShot(hi, si, { endLie: e.target.value as EndLie })}
-                        className="shot-select"
+                        className="shot-select w-full"
                       >
                         {END_LIES.map((l) => <option key={l} value={l}>{l}</option>)}
                       </select>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-1">
                         <DistanceInput
                           value={s.endLie === "HOLE" ? 0 : s.endDistance}
                           disabled={s.endLie === "HOLE"}
                           onChange={(v) => updateShot(hi, si, { endDistance: v })}
+                          fullWidth
                         />
-                        <span className="text-[#4A6B57]">
-                          {s.endLie === "HOLE" ? "" : distUnit(s.endLie)}
-                        </span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex gap-1 items-center">
                         {s.endLie !== "HOLE" && (
-                          <Chip
-                            size="sm" variant="flat" color="success"
-                            className="cursor-pointer"
-                            onClick={() => holeOut(hi, si)}
-                          >
-                            holed
-                          </Chip>
-                        )}
-                        {h.shots.length > 1 && (
-                          <Button
-                            size="sm" variant="light" color="danger"
-                            isIconOnly onPress={() => removeShot(hi, si)}
-                            className="min-w-6 h-6 text-base"
-                          >
-                            ×
-                          </Button>
+                          <span className="text-[#4A6B57] text-xs shrink-0">{distUnit(s.endLie)}</span>
                         )}
                       </div>
-                    </td>
+                    </div>
+                  </div>
+                  {s.endLie !== "HOLE" && (
+                    <div className="flex justify-end">
+                      <Chip
+                        size="sm" variant="flat" color="success"
+                        className="cursor-pointer"
+                        onClick={() => holeOut(hi, si)}
+                      >
+                        holed
+                      </Chip>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="pt-1">
+                <Button size="sm" variant="flat" color="primary" onPress={() => addShot(hi)}>
+                  + Add shot
+                </Button>
+              </div>
+            </div>
+
+            {/* ── Desktop: table ──────────────────────────────────────── */}
+            <div className="hidden sm:block">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-[#003D2B] text-[#F5D130]">
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">#</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">From</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">To</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Dist</th>
+                    <th className="px-4 py-2 text-left font-semibold tracking-wide">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="px-4 py-3">
-              <Button size="sm" variant="flat" color="primary" onPress={() => addShot(hi)}>
-                + Add shot
-              </Button>
+                </thead>
+                <tbody>
+                  {h.shots.map((s, si) => (
+                    <tr key={si} className="border-b border-[#E8F5EE] last:border-0 hover:bg-[#E8F5EE]/50">
+                      <td className="px-4 py-2 font-mono tabular-nums font-medium text-[#4A6B57]">{s.shotNumber}</td>
+                      <td className="px-4 py-2">
+                        <select
+                          value={s.startLie}
+                          onChange={(e) => updateShot(hi, si, { startLie: e.target.value as Lie })}
+                          className="shot-select"
+                        >
+                          {START_LIES.map((l) => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className="flex items-center gap-1">
+                          <DistanceInput
+                            value={s.startDistance}
+                            onChange={(v) => updateShot(hi, si, { startDistance: v })}
+                          />
+                          <span className="text-[#4A6B57]">{distUnit(s.startLie)}</span>
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <select
+                          value={s.endLie}
+                          onChange={(e) => updateShot(hi, si, { endLie: e.target.value as EndLie })}
+                          className="shot-select"
+                        >
+                          {END_LIES.map((l) => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className="flex items-center gap-1">
+                          <DistanceInput
+                            value={s.endLie === "HOLE" ? 0 : s.endDistance}
+                            disabled={s.endLie === "HOLE"}
+                            onChange={(v) => updateShot(hi, si, { endDistance: v })}
+                          />
+                          <span className="text-[#4A6B57]">
+                            {s.endLie === "HOLE" ? "" : distUnit(s.endLie)}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex gap-1 items-center">
+                          {s.endLie !== "HOLE" && (
+                            <Chip
+                              size="sm" variant="flat" color="success"
+                              className="cursor-pointer"
+                              onClick={() => holeOut(hi, si)}
+                            >
+                              holed
+                            </Chip>
+                          )}
+                          {h.shots.length > 1 && (
+                            <Button
+                              size="sm" variant="light" color="danger"
+                              isIconOnly onPress={() => removeShot(hi, si)}
+                              className="min-w-6 h-6 text-base"
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="px-4 py-3">
+                <Button size="sm" variant="flat" color="primary" onPress={() => addShot(hi)}>
+                  + Add shot
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>
       ))}
 
-      {/* Footer actions */}
+      {/* Footer: add hole */}
       <div className="flex items-center pt-2 border-t border-[#C8DDD0]">
         <Button
           variant="bordered"
@@ -624,9 +705,9 @@ export function NewRound() {
 
       {/* Confirm publish modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => !submitting && setShowConfirm(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col gap-4">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm mx-0 sm:mx-4 p-6 flex flex-col gap-4">
             <h3 className="text-lg font-bold text-[#003D2B]">
               {!course.trim() || !holesComplete ? "Round not complete" : "Publish round?"}
             </h3>
