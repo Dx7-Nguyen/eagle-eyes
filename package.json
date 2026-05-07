@@ -8,7 +8,8 @@
     "build": "cd client && npm run build && cd ../server && npm run build",
     "db:migrate": "cd server && npx prisma migrate dev",
     "db:seed": "cd server && npx prisma db seed",
-    "db:studio": "cd server && npx prisma studio"
+    "db:studio": "cd server && npx prisma studio",
+    "test": "cd server && npm test && cd ../client && npm test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
