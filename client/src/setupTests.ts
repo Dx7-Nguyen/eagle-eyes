@@ -17,14 +17,14 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // HeroUI uses ResizeObserver internally
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+window.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
 // IntersectionObserver used by some HeroUI components
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+window.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
